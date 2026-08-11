@@ -5,16 +5,26 @@ import RegisterPage from './pages/RegisterPage';
 import CustomerDashboardPage from './pages/CustomerDashboardPage';
 import CreateOrderPage from './pages/CreateOrderPage';
 import ExecutorsPage from './pages/ExecutorsPage';
+import ExecutorDetailsPage from './pages/ExecutorDetailsPage';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route
+          path="/"
+          element={<HomePage />}
+        />
 
-        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/login"
+          element={<LoginPage />}
+        />
 
-        <Route path="/register" element={<RegisterPage />} />
+        <Route
+          path="/register"
+          element={<RegisterPage />}
+        />
 
         <Route
           path="/customer"
@@ -29,6 +39,11 @@ function App() {
         <Route
           path="/executors"
           element={<ExecutorsPage />}
+        />
+
+        <Route
+          path="/executors/:id"
+          element={<ExecutorDetailsPage />}
         />
       </Routes>
     </BrowserRouter>

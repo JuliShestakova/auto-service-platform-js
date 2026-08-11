@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const executors = [
   {
     id: 1,
@@ -58,9 +60,9 @@ function ExecutorsPage() {
               Статус: {executor.status}
             </p>
 
-            <button type="button">
+            <Link to={`/executors/${executor.id}`}>
               Подробнее
-            </button>
+            </Link>
           </article>
         ))}
       </section>
