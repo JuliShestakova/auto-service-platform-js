@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import CustomerDashboardPage from './pages/CustomerDashboardPage';
 import CreateOrderPage from './pages/CreateOrderPage';
+import ExecutorsPage from './pages/ExecutorsPage';
 
 function App() {
   return (
@@ -23,6 +24,11 @@ function App() {
         <Route
           path="/customer/orders/new"
           element={<CreateOrderPage />}
+        />
+
+        <Route
+          path="/executors"
+          element={<ExecutorsPage />}
         />
       </Routes>
     </BrowserRouter>
