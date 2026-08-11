@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const executors = {
   1: {
@@ -75,6 +75,7 @@ const executors = {
 
 function ExecutorDetailsPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const executor = executors[id];
 
@@ -82,12 +83,25 @@ function ExecutorDetailsPage() {
     return (
       <main>
         <h1>Исполнитель не найден</h1>
+
         <p>
           Автосервис с таким идентификатором не найден.
         </p>
       </main>
     );
   }
+
+  const handleSelectExecutor = () => {
+    localStorage.setItem(
+      'selectedExecutor',
+      JSON.stringify({
+        id,
+        name: executor.name,
+      })
+    );
+
+    navigate('/customer');
+  };
 
   return (
     <main>
@@ -126,7 +140,10 @@ function ExecutorDetailsPage() {
         ))}
       </section>
 
-      <button type="button">
+      <button
+        type="button"
+        onClick={handleSelectExecutor}
+      >
         Выбрать исполнителя
       </button>
     </main>
