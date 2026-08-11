@@ -1,0 +1,53 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import CustomerDashboardPage from './pages/CustomerDashboardPage';
+import CreateOrderPage from './pages/CreateOrderPage';
+import ExecutorsPage from './pages/ExecutorsPage';
+import ExecutorDetailsPage from './pages/ExecutorDetailsPage';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/"
+          element={<HomePage />}
+        />
+
+        <Route
+          path="/login"
+          element={<LoginPage />}
+        />
+
+        <Route
+          path="/register"
+          element={<RegisterPage />}
+        />
+
+        <Route
+          path="/customer"
+          element={<CustomerDashboardPage />}
+        />
+
+        <Route
+          path="/customer/orders/new"
+          element={<CreateOrderPage />}
+        />
+
+        <Route
+          path="/executors"
+          element={<ExecutorsPage />}
+        />
+
+        <Route
+          path="/executors/:id"
+          element={<ExecutorDetailsPage />}
+        />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
