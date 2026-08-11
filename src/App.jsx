@@ -3,6 +3,7 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import CustomerDashboardPage from './pages/CustomerDashboardPage';
+import CreateOrderPage from './pages/CreateOrderPage';
 
 function App() {
   return (
@@ -17,6 +18,11 @@ function App() {
         <Route
           path="/customer"
           element={<CustomerDashboardPage />}
+        />
+
+        <Route
+          path="/customer/orders/new"
+          element={<CreateOrderPage />}
         />
       </Routes>
     </BrowserRouter>
