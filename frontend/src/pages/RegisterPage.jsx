@@ -4,6 +4,7 @@ function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [role, setRole] = useState('customer');
 
   const handleSubmit = (event) => {
@@ -13,6 +14,7 @@ function RegisterPage() {
       name,
       email,
       password,
+      passwordConfirm,
       role,
     });
   };
@@ -22,6 +24,32 @@ function RegisterPage() {
       <h1>Регистрация</h1>
 
       <form onSubmit={handleSubmit}>
+        <fieldset>
+          <legend>Выберите роль</legend>
+
+          <label>
+            <input
+              type="radio"
+              name="role"
+              value="customer"
+              checked={role === 'customer'}
+              onChange={(event) => setRole(event.target.value)}
+            />
+            Заказчик
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              name="role"
+              value="executor"
+              checked={role === 'executor'}
+              onChange={(event) => setRole(event.target.value)}
+            />
+            Исполнитель
+          </label>
+        </fieldset>
+
         <div>
           <label htmlFor="name">
             Имя
@@ -29,6 +57,7 @@ function RegisterPage() {
 
           <input
             id="name"
+            name="name"
             type="text"
             value={name}
             onChange={(event) => setName(event.target.value)}
@@ -44,6 +73,7 @@ function RegisterPage() {
 
           <input
             id="email"
+            name="email"
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -59,6 +89,7 @@ function RegisterPage() {
 
           <input
             id="password"
+            name="password"
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
@@ -68,23 +99,21 @@ function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="role">
-            Тип пользователя
+          <label htmlFor="passwordConfirm">
+            Подтверждение пароля
           </label>
 
-          <select
-            id="role"
-            value={role}
-            onChange={(event) => setRole(event.target.value)}
-          >
-            <option value="customer">
-              Заказчик
-            </option>
-
-            <option value="executor">
-              Исполнитель
-            </option>
-          </select>
+          <input
+            id="passwordConfirm"
+            name="passwordConfirm"
+            type="password"
+            value={passwordConfirm}
+            onChange={(event) =>
+              setPasswordConfirm(event.target.value)
+            }
+            placeholder="Повторите пароль"
+            required
+          />
         </div>
 
         <button type="submit">

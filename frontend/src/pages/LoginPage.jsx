@@ -25,6 +25,7 @@ function LoginPage() {
 
           <input
             id="email"
+            name="email"
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -40,6 +41,7 @@ function LoginPage() {
 
           <input
             id="password"
+            name="password"
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
