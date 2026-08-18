@@ -1,6 +1,9 @@
 import { useState } from 'react';
 
-function RegisterPage() {
+function RegisterPage({
+  isModal = false,
+  onSwitchToLogin,
+}) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,106 +23,163 @@ function RegisterPage() {
   };
 
   return (
-    <main>
-      <h1>Регистрация</h1>
+    <main className={isModal ? 'auth-page auth-page-modal' : 'auth-page'}>
+      <div className="auth-card">
+        <div className="auth-header">
+          <p className="auth-label">
+            АВТОСЕРВИС РЯДОМ
+          </p>
 
-      <form onSubmit={handleSubmit}>
-        <fieldset>
-          <legend>Выберите роль</legend>
+          <h1 id={isModal ? 'auth-modal-title' : undefined}>
+            Регистрация
+          </h1>
 
-          <label>
+          <p className="auth-subtitle">
+            Создайте аккаунт и начните пользоваться сервисом.
+          </p>
+        </div>
+
+        <form
+          className="auth-form"
+          onSubmit={handleSubmit}
+        >
+          <fieldset className="auth-role">
+            <legend>Выберите роль</legend>
+
+            <label
+              className={
+                role === 'customer'
+                  ? 'auth-role-option active'
+                  : 'auth-role-option'
+              }
+            >
+              <input
+                type="radio"
+                name="role"
+                value="customer"
+                checked={role === 'customer'}
+                onChange={(event) =>
+                  setRole(event.target.value)
+                }
+              />
+
+              <span>Заказчик</span>
+            </label>
+
+            <label
+              className={
+                role === 'executor'
+                  ? 'auth-role-option active'
+                  : 'auth-role-option'
+              }
+            >
+              <input
+                type="radio"
+                name="role"
+                value="executor"
+                checked={role === 'executor'}
+                onChange={(event) =>
+                  setRole(event.target.value)
+                }
+              />
+
+              <span>Исполнитель</span>
+            </label>
+          </fieldset>
+
+          <div className="auth-field">
+            <label htmlFor="register-name">
+              Имя
+            </label>
+
             <input
-              type="radio"
-              name="role"
-              value="customer"
-              checked={role === 'customer'}
-              onChange={(event) => setRole(event.target.value)}
+              id="register-name"
+              name="name"
+              type="text"
+              value={name}
+              onChange={(event) =>
+                setName(event.target.value)
+              }
+              placeholder="Введите имя"
+              required
             />
-            Заказчик
-          </label>
+          </div>
 
-          <label>
+          <div className="auth-field">
+            <label htmlFor="register-email">
+              Email
+            </label>
+
             <input
-              type="radio"
-              name="role"
-              value="executor"
-              checked={role === 'executor'}
-              onChange={(event) => setRole(event.target.value)}
+              id="register-email"
+              name="email"
+              type="email"
+              value={email}
+              onChange={(event) =>
+                setEmail(event.target.value)
+              }
+              placeholder="Введите email"
+              required
             />
-            Исполнитель
-          </label>
-        </fieldset>
+          </div>
 
-        <div>
-          <label htmlFor="name">
-            Имя
-          </label>
+          <div className="auth-field">
+            <label htmlFor="register-password">
+              Пароль
+            </label>
 
-          <input
-            id="name"
-            name="name"
-            type="text"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="Введите имя"
-            required
-          />
-        </div>
+            <input
+              id="register-password"
+              name="password"
+              type="password"
+              value={password}
+              onChange={(event) =>
+                setPassword(event.target.value)
+              }
+              placeholder="Введите пароль"
+              required
+            />
+          </div>
 
-        <div>
-          <label htmlFor="email">
-            Email
-          </label>
+          <div className="auth-field">
+            <label htmlFor="register-password-confirm">
+              Подтверждение пароля
+            </label>
 
-          <input
-            id="email"
-            name="email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="Введите email"
-            required
-          />
-        </div>
+            <input
+              id="register-password-confirm"
+              name="passwordConfirm"
+              type="password"
+              value={passwordConfirm}
+              onChange={(event) =>
+                setPasswordConfirm(event.target.value)
+              }
+              placeholder="Повторите пароль"
+              required
+            />
+          </div>
 
-        <div>
-          <label htmlFor="password">
-            Пароль
-          </label>
+          <button
+            type="submit"
+            className="auth-submit"
+          >
+            Зарегистрироваться
+          </button>
+        </form>
 
-          <input
-            id="password"
-            name="password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Введите пароль"
-            required
-          />
-        </div>
+        {onSwitchToLogin && (
+          <div className="auth-switch">
+            <span>Уже есть аккаунт?</span>
 
-        <div>
-          <label htmlFor="passwordConfirm">
-            Подтверждение пароля
-          </label>
-
-          <input
-            id="passwordConfirm"
-            name="passwordConfirm"
-            type="password"
-            value={passwordConfirm}
-            onChange={(event) =>
-              setPasswordConfirm(event.target.value)
-            }
-            placeholder="Повторите пароль"
-            required
-          />
-        </div>
-
-        <button type="submit">
-          Зарегистрироваться
-        </button>
-      </form>
+            <button
+              type="button"
+              onClick={onSwitchToLogin}
+            >
+              Войти
+            </button>
+          </div>
+        )}
+      </div>
     </main>
   );
 }
