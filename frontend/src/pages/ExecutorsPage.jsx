@@ -1,36 +1,51 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-const executors = [
-  {
-    id: 1,
-    name: 'Автосервис Мотор',
-    rating: 4.9,
-    reviews: 128,
-    price: 'от 2 500 ₽',
-    address: 'ул. Красная, 120',
-    status: 'Открыто',
-  },
-  {
-    id: 2,
-    name: 'АвтоПрофи',
-    rating: 4.8,
-    reviews: 96,
-    price: 'от 2 800 ₽',
-    address: 'ул. Северная, 45',
-    status: 'Открыто',
-  },
-  {
-    id: 3,
-    name: 'Гараж №1',
-    rating: 4.7,
-    reviews: 74,
-    price: 'от 2 300 ₽',
-    address: 'ул. Ставропольская, 88',
-    status: 'Закрыто',
-  },
-];
-
 function ExecutorsPage() {
+  const [executors, setExecutors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    async function fetchExecutors() {
+      try {
+        const response = await fetch('/api/executors');
+
+        if (!response.ok) {
+          throw new Error('Не удалось загрузить исполнителей');
+        }
+
+        const data = await response.json();
+
+        setExecutors(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchExecutors();
+  }, []);
+
+  if (loading) {
+    return (
+      <main>
+        <h1>Исполнители</h1>
+        <p>Загрузка...</p>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main>
+        <h1>Исполнители</h1>
+        <p>{error}</p>
+      </main>
+    );
+  }
+
   return (
     <main>
       <h1>Исполнители</h1>

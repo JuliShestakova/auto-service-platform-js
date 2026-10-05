@@ -1,10 +1,16 @@
 from fastapi import Depends, FastAPI
+
 from sqlalchemy import select, text
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db
-from app.models import User
+
+from app.models import User, Executor
+
 from app.schemas.user import UserResponse
+
+from app.schemas.executor import ExecutorResponse
 
 
 app = FastAPI(
@@ -44,3 +50,16 @@ async def get_users(
     users = result.scalars().all()
 
     return users
+
+
+@app.get("/executors", response_model=list[ExecutorResponse])
+async def get_executors(
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(Executor)
+    )
+
+    executors = result.scalars().all()
+
+    return executors

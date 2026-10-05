@@ -212,237 +212,6 @@ function HeaderLogo() {
    ДАННЫЕ АВТОСЕРВИСОВ
 ===================================================== */
 
-const services = [
-  {
-    id: 1,
-    name: 'Автосервис Мотор',
-    rating: 4.9,
-    reviews: 128,
-    price: 'от 2 500 ₽',
-    address: 'ул. Красная, 120',
-    status: 'Открыто',
-    hours: '09:00–20:00',
-    description:
-      'Диагностика, техническое обслуживание и ремонт автомобилей.',
-    services: [
-      ['Диагностика автомобиля', 'от 1 000 ₽'],
-      ['Замена масла', 'от 1 500 ₽'],
-      ['Замена тормозных колодок', 'от 2 500 ₽'],
-      ['Ремонт подвески', 'от 3 000 ₽'],
-    ],
-  },
-
-  {
-    id: 2,
-    name: 'АвтоПрофи',
-    rating: 4.8,
-    reviews: 96,
-    price: 'от 2 800 ₽',
-    address: 'ул. Северная, 45',
-    status: 'Открыто',
-    hours: '08:00–21:00',
-    description:
-      'Полный комплекс обслуживания автомобилей и компьютерная диагностика.',
-    services: [
-      ['Компьютерная диагностика', 'от 1 200 ₽'],
-      ['Замена масла', 'от 1 700 ₽'],
-      ['Тормозная система', 'от 2 800 ₽'],
-      ['Ходовая часть', 'от 3 500 ₽'],
-    ],
-  },
-
-  {
-    id: 3,
-    name: 'Гараж №1',
-    rating: 4.7,
-    reviews: 74,
-    price: 'от 2 300 ₽',
-    address: 'ул. Ставропольская, 88',
-    status: 'Закрыто',
-    hours: '09:00–19:00',
-    description:
-      'Ремонт и обслуживание автомобилей. Работаем с большинством марок.',
-    services: [
-      ['Диагностика', 'от 900 ₽'],
-      ['Замена масла', 'от 1 400 ₽'],
-      ['Тормозные колодки', 'от 2 300 ₽'],
-      ['Ремонт подвески', 'от 3 000 ₽'],
-    ],
-  },
-
-  {
-    id: 4,
-    name: 'АвтоМастер',
-    rating: 4.9,
-    reviews: 112,
-    price: 'от 2 700 ₽',
-    address: 'ул. Московская, 64',
-    status: 'Открыто',
-    hours: '08:30–20:00',
-    description:
-      'Профессиональный ремонт и техническое обслуживание автомобилей.',
-    services: [
-      ['Диагностика', 'от 1 000 ₽'],
-      ['ТО автомобиля', 'от 2 700 ₽'],
-      ['Замена колодок', 'от 2 600 ₽'],
-      ['Ремонт двигателя', 'от 5 000 ₽'],
-    ],
-  },
-
-  {
-    id: 5,
-    name: 'Drive Service',
-    rating: 4.8,
-    reviews: 87,
-    price: 'от 2 600 ₽',
-    address: 'ул. Дзержинского, 91',
-    status: 'Открыто',
-    hours: '09:00–21:00',
-    description:
-      'Современный автосервис с онлайн-записью и диагностикой.',
-    services: [
-      ['Диагностика', 'от 1 000 ₽'],
-      ['Замена масла', 'от 1 600 ₽'],
-      ['Тормозная система', 'от 2 600 ₽'],
-      ['Сход-развал', 'от 1 800 ₽'],
-    ],
-  },
-
-  {
-    id: 6,
-    name: 'АвтоГарант',
-    rating: 4.6,
-    reviews: 63,
-    price: 'от 2 400 ₽',
-    address: 'ул. Тургенева, 32',
-    status: 'Открыто',
-    hours: '09:00–19:00',
-    description:
-      'Ремонт автомобилей и плановое техническое обслуживание.',
-    services: [
-      ['Диагностика', 'от 900 ₽'],
-      ['Замена масла', 'от 1 400 ₽'],
-      ['Тормозная система', 'от 2 400 ₽'],
-      ['Ремонт подвески', 'от 3 200 ₽'],
-    ],
-  },
-
-  {
-    id: 7,
-    name: 'Pro Auto',
-    rating: 4.9,
-    reviews: 141,
-    price: 'от 3 000 ₽',
-    address: 'ул. Калинина, 150',
-    status: 'Открыто',
-    hours: '08:00–22:00',
-    description:
-      'Автосервис полного цикла с опытными специалистами.',
-    services: [
-      ['Диагностика', 'от 1 100 ₽'],
-      ['Техническое обслуживание', 'от 3 000 ₽'],
-      ['Замена колодок', 'от 2 900 ₽'],
-      ['Ремонт двигателя', 'от 6 000 ₽'],
-    ],
-  },
-
-  {
-    id: 8,
-    name: 'АвтоЛидер',
-    rating: 4.7,
-    reviews: 58,
-    price: 'от 2 500 ₽',
-    address: 'ул. Уральская, 18',
-    status: 'Открыто',
-    hours: '09:00–20:00',
-    description:
-      'Обслуживание автомобилей различных марок.',
-    services: [
-      ['Диагностика', 'от 1 000 ₽'],
-      ['Замена масла', 'от 1 500 ₽'],
-      ['Тормозные колодки', 'от 2 500 ₽'],
-      ['Ремонт подвески', 'от 3 000 ₽'],
-    ],
-  },
-
-  {
-    id: 9,
-    name: 'Механика',
-    rating: 4.8,
-    reviews: 91,
-    price: 'от 2 600 ₽',
-    address: 'ул. Новороссийская, 210',
-    status: 'Открыто',
-    hours: '08:00–20:00',
-    description:
-      'Диагностика и ремонт автомобилей с гарантией на работы.',
-    services: [
-      ['Диагностика', 'от 900 ₽'],
-      ['Замена масла', 'от 1 500 ₽'],
-      ['Тормозная система', 'от 2 600 ₽'],
-      ['Ремонт ходовой', 'от 3 200 ₽'],
-    ],
-  },
-
-  {
-    id: 10,
-    name: 'Auto Expert',
-    rating: 4.9,
-    reviews: 105,
-    price: 'от 2 900 ₽',
-    address: 'ул. Восточная, 42',
-    status: 'Открыто',
-    hours: '09:00–21:00',
-    description:
-      'Современный сервис с профессиональным оборудованием.',
-    services: [
-      ['Компьютерная диагностика', 'от 1 100 ₽'],
-      ['ТО автомобиля', 'от 2 900 ₽'],
-      ['Замена тормозных колодок', 'от 2 700 ₽'],
-      ['Ремонт подвески', 'от 3 500 ₽'],
-    ],
-  },
-
-  {
-    id: 11,
-    name: 'Автоцентр Юг',
-    rating: 4.6,
-    reviews: 49,
-    price: 'от 2 200 ₽',
-    address: 'ул. Российская, 77',
-    status: 'Открыто',
-    hours: '09:00–19:00',
-    description:
-      'Ремонт и обслуживание автомобилей.',
-    services: [
-      ['Диагностика', 'от 900 ₽'],
-      ['Замена масла', 'от 1 300 ₽'],
-      ['Тормоза', 'от 2 200 ₽'],
-      ['Подвеска', 'от 2 900 ₽'],
-    ],
-  },
-
-  {
-    id: 12,
-    name: 'Garage Pro',
-    rating: 4.7,
-    reviews: 67,
-    price: 'от 2 400 ₽',
-    address: 'ул. Ярославская, 25',
-    status: 'Открыто',
-    hours: '09:00–20:00',
-    description:
-      'Ремонт и техническое обслуживание.',
-    services: [
-      ['Диагностика', 'от 900 ₽'],
-      ['Замена масла', 'от 1 400 ₽'],
-      ['Тормоза', 'от 2 400 ₽'],
-      ['Ходовая', 'от 3 000 ₽'],
-    ],
-  },
-];
-
-
 /* =====================================================
    FOOTER
 ===================================================== */
@@ -517,6 +286,10 @@ function HomePage({
   const [selectedService, setSelectedService] =
     useState(null);
 
+  const [services, setServices] = useState([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
+  const [servicesError, setServicesError] = useState('');
+
   const [bookingService, setBookingService] =
     useState('');
 
@@ -585,6 +358,40 @@ function HomePage({
 
     navigate('/');
   };
+
+
+  /* =====================================================
+     ЗАГРУЗКА АВТОСЕРВИСОВ
+  ===================================================== */
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setServicesLoading(true);
+        setServicesError('');
+
+        const response = await fetch('/api/executors');
+
+        if (!response.ok) {
+          throw new Error('Не удалось загрузить автосервисы');
+        }
+
+        const data = await response.json();
+
+        setServices(data);
+      } catch (error) {
+        setServicesError(
+          error instanceof Error
+            ? error.message
+            : 'Не удалось загрузить автосервисы'
+        );
+      } finally {
+        setServicesLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
 
 
   /* =====================================================
@@ -1537,6 +1344,113 @@ function HomePage({
           <>
 
         {/* ===================================================
+            КАК ЭТО РАБОТАЕТ
+        =================================================== */}
+
+        <section className="how-section">
+
+          <p className="section-label">
+            Просто и удобно
+          </p>
+
+          <h2>
+            Как это работает
+          </h2>
+
+          <div className="section-line" />
+
+
+          <div className="steps-grid">
+
+            {/* 01 */}
+
+            <article className="step-card">
+
+              <div className="step-card-top">
+
+                <span className="step-number">
+                  01
+                </span>
+
+                <span className="step-icon">
+                  <CarIcon />
+                </span>
+
+              </div>
+
+              <h3>
+                Найдите сервис
+              </h3>
+
+              <p>
+                Сравните автосервисы по рейтингу,
+                стоимости и расположению.
+              </p>
+
+            </article>
+
+
+            {/* 02 */}
+
+            <article className="step-card">
+
+              <div className="step-card-top">
+
+                <span className="step-number">
+                  02
+                </span>
+
+                <span className="step-icon">
+                  <SearchIcon />
+                </span>
+
+              </div>
+
+              <h3>
+                Выберите услугу
+              </h3>
+
+              <p>
+                Посмотрите услуги и цены
+                выбранного автосервиса.
+              </p>
+
+            </article>
+
+
+            {/* 03 */}
+
+            <article className="step-card">
+
+              <div className="step-card-top">
+
+                <span className="step-number">
+                  03
+                </span>
+
+                <span className="step-icon">
+                  <CalendarIcon />
+                </span>
+
+              </div>
+
+              <h3>
+                Запишитесь онлайн
+              </h3>
+
+              <p>
+                Выберите дату и удобное время
+                для обслуживания автомобиля.
+              </p>
+
+            </article>
+
+          </div>
+
+        </section>
+
+
+        {/* ===================================================
             АВТОСЕРВИСЫ
         =================================================== */}
 
@@ -1575,8 +1489,30 @@ function HomePage({
           </div>
 
 
+          {servicesLoading && (
+            <p className="services-subtitle">
+              Загрузка автосервисов...
+            </p>
+          )}
+
+          {servicesError && (
+            <p className="services-subtitle">
+              {servicesError}
+            </p>
+          )}
+
+          {!servicesLoading &&
+            !servicesError &&
+            services.length === 0 && (
+              <p className="services-subtitle">
+                Автосервисы пока не найдены.
+              </p>
+            )}
+
+
           {/* ТАБЛИЦА */}
 
+          {!servicesLoading && !servicesError && services.length > 0 && (
           <div className="services-table">
 
             <div className="services-table-head">
@@ -1700,13 +1636,14 @@ function HomePage({
             )}
 
           </div>
+          )}
 
 
           {/* =================================================
               ПАГИНАЦИЯ
           ================================================= */}
 
-          {totalPages > 1 && (
+          {!servicesLoading && !servicesError && totalPages > 1 && (
 
             <div className="pagination">
 
@@ -2240,111 +2177,6 @@ function HomePage({
         )}
 
 
-        {/* ===================================================
-            КАК ЭТО РАБОТАЕТ
-        =================================================== */}
-
-        <section className="how-section">
-
-          <p className="section-label">
-            Просто и удобно
-          </p>
-
-          <h2>
-            Как это работает
-          </h2>
-
-          <div className="section-line" />
-
-
-          <div className="steps-grid">
-
-            {/* 01 */}
-
-            <article className="step-card">
-
-              <div className="step-card-top">
-
-                <span className="step-number">
-                  01
-                </span>
-
-                <span className="step-icon">
-                  <CarIcon />
-                </span>
-
-              </div>
-
-              <h3>
-                Найдите сервис
-              </h3>
-
-              <p>
-                Сравните автосервисы по рейтингу,
-                стоимости и расположению.
-              </p>
-
-            </article>
-
-
-            {/* 02 */}
-
-            <article className="step-card">
-
-              <div className="step-card-top">
-
-                <span className="step-number">
-                  02
-                </span>
-
-                <span className="step-icon">
-                  <SearchIcon />
-                </span>
-
-              </div>
-
-              <h3>
-                Выберите услугу
-              </h3>
-
-              <p>
-                Посмотрите услуги и цены
-                выбранного автосервиса.
-              </p>
-
-            </article>
-
-
-            {/* 03 */}
-
-            <article className="step-card">
-
-              <div className="step-card-top">
-
-                <span className="step-number">
-                  03
-                </span>
-
-                <span className="step-icon">
-                  <CalendarIcon />
-                </span>
-
-              </div>
-
-              <h3>
-                Запишитесь онлайн
-              </h3>
-
-              <p>
-                Выберите дату и удобное время
-                для обслуживания автомобиля.
-              </p>
-
-            </article>
-
-          </div>
-
-        </section>
 
 
 
