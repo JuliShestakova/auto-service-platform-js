@@ -19,8 +19,10 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/find_service
       SECRET_KEY: ${SECRET_KEY}
+      REDIS_URL: redis://redis:6379/0
     depends_on:
       - db
+      - redis
 
   redis:
     image: redis:7-alpine
