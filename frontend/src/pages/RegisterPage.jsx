@@ -10,20 +10,81 @@ function RegisterPage({
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [role, setRole] = useState('customer');
 
-  const handleSubmit = (event) => {
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    console.log('Регистрация:', {
-      name,
-      email,
-      password,
-      passwordConfirm,
-      role,
-    });
+    setError('');
+    setSuccess('');
+
+    if (password !== passwordConfirm) {
+      setError('Пароли не совпадают');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          password,
+          role,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.detail || 'Не удалось зарегистрироваться',
+        );
+      }
+
+      console.log('Регистрация успешна:', data);
+
+      setSuccess(
+        'Регистрация прошла успешно! Теперь вы можете войти.',
+      );
+
+      setName('');
+      setEmail('');
+      setPassword('');
+      setPasswordConfirm('');
+      setRole('customer');
+
+      if (onSwitchToLogin) {
+        setTimeout(() => {
+          onSwitchToLogin();
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Ошибка регистрации:', error);
+
+      setError(
+        error.message || 'Произошла ошибка при регистрации',
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <main className={isModal ? 'auth-page auth-page-modal' : 'auth-page'}>
+    <main
+      className={
+        isModal
+          ? 'auth-page auth-page-modal'
+          : 'auth-page'
+      }
+    >
       <div className="auth-card">
         <div className="auth-header">
           <p className="auth-label">
@@ -61,6 +122,7 @@ function RegisterPage({
                 onChange={(event) =>
                   setRole(event.target.value)
                 }
+                disabled={isLoading}
               />
 
               <span>Заказчик</span>
@@ -81,6 +143,7 @@ function RegisterPage({
                 onChange={(event) =>
                   setRole(event.target.value)
                 }
+                disabled={isLoading}
               />
 
               <span>Исполнитель</span>
@@ -101,6 +164,8 @@ function RegisterPage({
                 setName(event.target.value)
               }
               placeholder="Введите имя"
+              autoComplete="name"
+              disabled={isLoading}
               required
             />
           </div>
@@ -119,6 +184,8 @@ function RegisterPage({
                 setEmail(event.target.value)
               }
               placeholder="Введите email"
+              autoComplete="email"
+              disabled={isLoading}
               required
             />
           </div>
@@ -137,6 +204,9 @@ function RegisterPage({
                 setPassword(event.target.value)
               }
               placeholder="Введите пароль"
+              autoComplete="new-password"
+              minLength={8}
+              disabled={isLoading}
               required
             />
           </div>
@@ -155,15 +225,33 @@ function RegisterPage({
                 setPasswordConfirm(event.target.value)
               }
               placeholder="Повторите пароль"
+              autoComplete="new-password"
+              minLength={8}
+              disabled={isLoading}
               required
             />
           </div>
 
+          {error && (
+            <p className="auth-error" role="alert">
+              {error}
+            </p>
+          )}
+
+          {success && (
+            <p className="auth-success" role="status">
+              {success}
+            </p>
+          )}
+
           <button
             type="submit"
             className="auth-submit"
+            disabled={isLoading}
           >
-            Зарегистрироваться
+            {isLoading
+              ? 'Регистрация...'
+              : 'Зарегистрироваться'}
           </button>
         </form>
 
@@ -174,6 +262,7 @@ function RegisterPage({
             <button
               type="button"
               onClick={onSwitchToLogin}
+              disabled={isLoading}
             >
               Войти
             </button>

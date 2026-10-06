@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_user
 from app.auth.jwt import create_access_token, create_refresh_token
+from app.auth.refresh_tokens import save_refresh_token
+from app.auth.roles import require_role
 from app.auth.security import hash_password, verify_password
 from app.db.database import get_db
 from app.models import Executor, User
@@ -43,8 +45,14 @@ async def db_test(
     }
 
 
-@app.get("/users", response_model=list[UserResponse])
+@app.get(
+    "/users",
+    response_model=list[UserResponse],
+)
 async def get_users(
+    current_user: User = Depends(
+        require_role("admin")
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
@@ -56,7 +64,10 @@ async def get_users(
     return users
 
 
-@app.get("/executors", response_model=list[ExecutorResponse])
+@app.get(
+    "/executors",
+    response_model=list[ExecutorResponse],
+)
 async def get_executors(
     db: AsyncSession = Depends(get_db),
 ):
@@ -94,7 +105,7 @@ async def register(
         name=data.name,
         email=data.email,
         password_hash=hash_password(data.password),
-        role="user",
+        role=data.role,
     )
 
     db.add(user)
@@ -125,7 +136,10 @@ async def login(
             detail="Invalid email or password",
         )
 
-    if not verify_password(data.password, user.password_hash):
+    if not verify_password(
+        data.password,
+        user.password_hash,
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
@@ -133,6 +147,11 @@ async def login(
 
     access_token = create_access_token(user.id)
     refresh_token = create_refresh_token(user.id)
+
+    await save_refresh_token(
+        refresh_token,
+        user.id,
+    )
 
     return TokenResponse(
         access_token=access_token,

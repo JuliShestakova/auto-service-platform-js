@@ -6,224 +6,144 @@ import {
 
 const AuthContext = createContext(undefined);
 
-/*
- * =========================================================
- * ТЕСТОВЫЕ ПОЛЬЗОВАТЕЛИ
- * =========================================================
- *
- * Заказчик:
- * customer@example.com
- * customer123
- *
- * Исполнитель:
- * executor@example.com
- * executor123
- *
- * Администратор:
- * admin@example.com
- * admin123
- */
-
-const testUsers = [
-  {
-    id: 1,
-    name: 'Иван Иванов',
-    email: 'customer@example.com',
-    password: 'customer123',
-    role: 'customer',
-
-    cars: [
-      {
-        id: 1,
-        brand: 'Toyota',
-        model: 'Camry',
-        year: 2020,
-        mileage: 120000,
-        vin: 'XXXXXXXXXXXXXXX',
-      },
-    ],
-  },
-
-  {
-    id: 2,
-    name: 'Автосервис Мотор',
-    email: 'executor@example.com',
-    password: 'executor123',
-    role: 'executor',
-
-    cars: [],
-  },
-
-  {
-    id: 3,
-    name: 'Администратор',
-    email: 'admin@example.com',
-    password: 'admin123',
-    role: 'admin',
-
-    cars: [],
-  },
-];
-
-
-/*
- * =========================================================
- * AUTH PROVIDER
- * =========================================================
- */
-
 function AuthProvider({ children }) {
-
-  /*
-   * При запуске приложения пытаемся восстановить
-   * пользователя из localStorage.
-   */
   const [user, setUser] = useState(() => {
-
     try {
-
-      const savedUser =
-        localStorage.getItem('autoServiceUser');
+      const savedUser = localStorage.getItem('autoServiceUser');
 
       if (!savedUser) {
         return null;
       }
 
       return JSON.parse(savedUser);
-
     } catch (error) {
-
       console.error(
         'Ошибка восстановления пользователя:',
         error
       );
 
-      localStorage.removeItem(
-        'autoServiceUser'
-      );
+      localStorage.removeItem('autoServiceUser');
 
       return null;
     }
-
   });
 
+  const login = async (email, password) => {
+    const normalizedEmail = String(email || '')
+      .trim()
+      .toLowerCase();
 
-  /*
-   * =======================================================
-   * ВХОД
-   * =======================================================
-   */
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          password,
+        }),
+      });
 
-  const login = (email, password) => {
+      const data = await response.json();
 
-    const normalizedEmail =
-      String(email || '')
-        .trim()
-        .toLowerCase();
+      if (!response.ok) {
+        return {
+          success: false,
+          error:
+            data.detail ||
+            'Неверный email или пароль.',
+        };
+      }
 
-    const normalizedPassword =
-      String(password || '').trim();
+      const {
+        access_token,
+        refresh_token,
+      } = data;
 
+      localStorage.setItem(
+        'accessToken',
+        access_token
+      );
 
-    const foundUser = testUsers.find(
-      (testUser) =>
-        testUser.email.toLowerCase() ===
-          normalizedEmail &&
-        testUser.password ===
-          normalizedPassword
-    );
+      localStorage.setItem(
+        'refreshToken',
+        refresh_token
+      );
 
+      /*
+       * Получаем информацию о текущем пользователе
+       * через защищённый endpoint /auth/me.
+       */
+      const meResponse = await fetch('/api/auth/me', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      });
 
-    /*
-     * Пользователь не найден
-     */
-    if (!foundUser) {
+      const meData = await meResponse.json();
+
+      if (!meResponse.ok) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+
+        return {
+          success: false,
+          error: 'Не удалось получить данные пользователя.',
+        };
+      }
+
+      const loggedUser = {
+        id: meData.id,
+        name: meData.name,
+        email: meData.email,
+        role: meData.role,
+        cars: [],
+      };
+
+      setUser(loggedUser);
+
+      localStorage.setItem(
+        'autoServiceUser',
+        JSON.stringify(loggedUser)
+      );
+
+      return {
+        success: true,
+        user: loggedUser,
+      };
+    } catch (error) {
+      console.error(
+        'Ошибка авторизации:',
+        error
+      );
 
       return {
         success: false,
-        error: 'Неверный email или пароль.',
+        error:
+          'Не удалось подключиться к серверу.',
       };
-
     }
-
-
-    /*
-     * Не сохраняем пароль пользователя.
-     */
-    const loggedUser = {
-
-      id: foundUser.id,
-
-      name: foundUser.name,
-
-      email: foundUser.email,
-
-      role: foundUser.role,
-
-      cars: foundUser.cars || [],
-
-    };
-
-
-    /*
-     * Сохраняем пользователя
-     * в состояние приложения.
-     */
-    setUser(loggedUser);
-
-
-    /*
-     * Сохраняем пользователя
-     * в localStorage.
-     *
-     * Благодаря этому после F5
-     * пользователь останется авторизован.
-     */
-    localStorage.setItem(
-      'autoServiceUser',
-      JSON.stringify(loggedUser)
-    );
-
-
-    /*
-     * Возвращаем пользователя LoginPage.
-     */
-    return {
-
-      success: true,
-
-      user: loggedUser,
-
-    };
-
   };
 
-
-  /*
-   * =======================================================
-   * ВЫХОД
-   * =======================================================
-   */
-
   const logout = () => {
-
     setUser(null);
 
     localStorage.removeItem(
       'autoServiceUser'
     );
 
+    localStorage.removeItem(
+      'accessToken'
+    );
+
+    localStorage.removeItem(
+      'refreshToken'
+    );
   };
 
-
-  /*
-   * =======================================================
-   * CONTEXT
-   * =======================================================
-   */
-
   return (
-
     <AuthContext.Provider
       value={{
         user,
@@ -231,41 +151,22 @@ function AuthProvider({ children }) {
         logout,
       }}
     >
-
       {children}
-
     </AuthContext.Provider>
-
   );
-
 }
 
-
-/*
- * =========================================================
- * USE AUTH
- * =========================================================
- */
-
 function useAuth() {
-
-  const context =
-    useContext(AuthContext);
-
+  const context = useContext(AuthContext);
 
   if (context === undefined) {
-
     throw new Error(
       'useAuth must be used inside AuthProvider'
     );
-
   }
 
-
   return context;
-
 }
-
 
 export {
   AuthProvider,

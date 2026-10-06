@@ -24,6 +24,8 @@ import MapPage from './pages/MapPage';
 import ExecutorDashboardPage from './pages/ExecutorDashboardPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 
+import ProtectedRoute from './contexts/ProtectedRoute';
+
 
 function App() {
   const [authModal, setAuthModal] = useState(null);
@@ -31,7 +33,7 @@ function App() {
 
   /* =====================================================
      АВТОРИЗАЦИЯ
-  ===================================================== */
+     ===================================================== */
 
   const openLogin = () => {
     setAuthModal('login');
@@ -50,13 +52,12 @@ function App() {
 
   /* =====================================================
      ЗАКРЫТИЕ МОДАЛЬНОГО ОКНА ПО ESC
-  ===================================================== */
+     ===================================================== */
 
   useEffect(() => {
     if (!authModal) {
       return undefined;
     }
-
 
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
@@ -64,15 +65,12 @@ function App() {
       }
     };
 
-
     document.addEventListener(
       'keydown',
       handleKeyDown
     );
 
-
     document.body.style.overflow = 'hidden';
-
 
     return () => {
       document.removeEventListener(
@@ -95,7 +93,7 @@ function App() {
 
           {/* =====================================================
               ГЛАВНАЯ СТРАНИЦА
-          ===================================================== */}
+              ===================================================== */}
 
           <Route
             path="/"
@@ -111,71 +109,90 @@ function App() {
 
           {/* =====================================================
               КАБИНЕТ ЗАКАЗЧИКА
-          ===================================================== */}
+              ДОСТУП ТОЛЬКО ДЛЯ CUSTOMER
+              ===================================================== */}
 
           <Route
-            path="/customer"
             element={
-              <HomePage
-                section="overview"
-                onLogin={openLogin}
-                onRegister={openRegister}
+              <ProtectedRoute
+                allowedRoles={['customer']}
               />
             }
-          />
+          >
 
+            <Route
+              path="/customer"
+              element={
+                <HomePage
+                  section="overview"
+                  onLogin={openLogin}
+                  onRegister={openRegister}
+                />
+              }
+            />
 
-          <Route
-            path="/customer/orders"
-            element={
-              <HomePage
-                section="orders"
-                onLogin={openLogin}
-                onRegister={openRegister}
-              />
-            }
-          />
+            <Route
+              path="/customer/orders"
+              element={
+                <HomePage
+                  section="orders"
+                  onLogin={openLogin}
+                  onRegister={openRegister}
+                />
+              }
+            />
 
+            <Route
+              path="/customer/requests"
+              element={
+                <HomePage
+                  section="requests"
+                  onLogin={openLogin}
+                  onRegister={openRegister}
+                />
+              }
+            />
 
-          <Route
-            path="/customer/requests"
-            element={
-              <HomePage
-                section="requests"
-                onLogin={openLogin}
-                onRegister={openRegister}
-              />
-            }
-          />
+            <Route
+              path="/customer/garage"
+              element={
+                <HomePage
+                  section="garage"
+                  onLogin={openLogin}
+                  onRegister={openRegister}
+                />
+              }
+            />
 
+            <Route
+              path="/customer/settings"
+              element={
+                <HomePage
+                  section="settings"
+                  onLogin={openLogin}
+                  onRegister={openRegister}
+                />
+              }
+            />
 
-          <Route
-            path="/customer/garage"
-            element={
-              <HomePage
-                section="garage"
-                onLogin={openLogin}
-                onRegister={openRegister}
-              />
-            }
-          />
+            {/* =================================================
+                СОЗДАНИЕ ЗАКАЗА
+                ТОЛЬКО ДЛЯ CUSTOMER
+                ================================================= */}
 
+            <Route
+              path="/customer/orders/new"
+              element={
+                <CreateOrderPage />
+              }
+            />
 
-          <Route
-            path="/customer/settings"
-            element={
-              <HomePage
-                section="settings"
-                onLogin={openLogin}
-                onRegister={openRegister}
-              />
-            }
-          />
+          </Route>
 
 
           {/* =====================================================
               СТАРЫЕ АДРЕСА ЗАКАЗЧИКА
-          ===================================================== */}
+              ===================================================== */}
 
           <Route
             path="/orders"
@@ -187,7 +204,6 @@ function App() {
             }
           />
 
-
           <Route
             path="/requests"
             element={
@@ -198,7 +214,6 @@ function App() {
             }
           />
 
-
           <Route
             path="/garage"
             element={
@@ -208,7 +223,6 @@ function App() {
               />
             }
           />
-
 
           <Route
             path="/settings"
@@ -222,20 +236,8 @@ function App() {
 
 
           {/* =====================================================
-              СОЗДАНИЕ ЗАКАЗА
-          ===================================================== */}
-
-          <Route
-            path="/customer/orders/new"
-            element={
-              <CreateOrderPage />
-            }
-          />
-
-
-          {/* =====================================================
               АВТОРИЗАЦИЯ
-          ===================================================== */}
+              ===================================================== */}
 
           <Route
             path="/login"
@@ -243,7 +245,6 @@ function App() {
               <LoginPage />
             }
           />
-
 
           <Route
             path="/register"
@@ -255,7 +256,8 @@ function App() {
 
           {/* =====================================================
               АВТОСЕРВИСЫ
-          ===================================================== */}
+              ПУБЛИЧНЫЕ СТРАНИЦЫ
+              ===================================================== */}
 
           <Route
             path="/executors"
@@ -263,7 +265,6 @@ function App() {
               <ExecutorsPage />
             }
           />
-
 
           <Route
             path="/executors/:id"
@@ -275,7 +276,7 @@ function App() {
 
           {/* =====================================================
               КАРТА
-          ===================================================== */}
+              ===================================================== */}
 
           <Route
             path="/map"
@@ -287,41 +288,53 @@ function App() {
 
           {/* =====================================================
               КАБИНЕТ ИСПОЛНИТЕЛЯ
-
-              ВАЖНО:
-              /executor/* позволяет ExecutorDashboardPage
-              самостоятельно определять текущий раздел:
-
-              /executor
-              /executor/requests
-              /executor/orders
-              /executor/schedule
-              /executor/profile
-          ===================================================== */}
+              ДОСТУП ТОЛЬКО ДЛЯ EXECUTOR
+              ===================================================== */}
 
           <Route
-            path="/executor/*"
             element={
-              <ExecutorDashboardPage />
+              <ProtectedRoute
+                allowedRoles={['executor']}
+              />
             }
-          />
+          >
+
+            <Route
+              path="/executor/*"
+              element={
+                <ExecutorDashboardPage />
+              }
+            />
+
+          </Route>
 
 
           {/* =====================================================
               КАБИНЕТ АДМИНИСТРАТОРА
-          ===================================================== */}
+              ДОСТУП ТОЛЬКО ДЛЯ ADMIN
+              ===================================================== */}
 
           <Route
-            path="/admin/*"
             element={
-              <AdminDashboardPage />
+              <ProtectedRoute
+                allowedRoles={['admin']}
+              />
             }
-          />
+          >
+
+            <Route
+              path="/admin/*"
+              element={
+                <AdminDashboardPage />
+              }
+            />
+
+          </Route>
 
 
           {/* =====================================================
               НЕИЗВЕСТНЫЙ АДРЕС
-          ===================================================== */}
+              ===================================================== */}
 
           <Route
             path="*"
@@ -338,20 +351,18 @@ function App() {
 
         {/* =====================================================
             МОДАЛЬНОЕ ОКНО АВТОРИЗАЦИИ
-        ===================================================== */}
+            ===================================================== */}
 
         {authModal && (
 
           <div
             className="auth-modal-overlay"
             onMouseDown={(event) => {
-
               if (
                 event.target === event.currentTarget
               ) {
                 closeAuth();
               }
-
             }}
           >
 
