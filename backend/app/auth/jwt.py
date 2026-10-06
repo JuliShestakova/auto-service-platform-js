@@ -1,11 +1,16 @@
+import os
 from datetime import datetime, timedelta, timezone
 
 import jwt
+from dotenv import load_dotenv
 
 
-# Временно задаём секрет.
-# Позже вынесем его в переменную окружения.
-SECRET_KEY = "find-service-super-secret-key-2026-change-me"
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY is not set")
 
 ALGORITHM = "HS256"
 
