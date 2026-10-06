@@ -30,3 +30,8 @@ __pycache__/
 
 # Poetry virtual environment
 backend/.venv/
+
+# Environment variables
+.env
+.env.*
+!.env.example
