@@ -1,4 +1,3 @@
-
 from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,9 +32,10 @@ from app.schemas.user import UserResponse
 app = FastAPI(
     title="Найти сервис API",
     version="1.0.0",
+    docs_url="/docs",
+    openapi_url="/openapi.json",
 )
 
-# Middleware для логирования HTTP-запросов и времени ответа.
 app.add_middleware(RequestLoggingMiddleware)
 
 
@@ -45,22 +45,12 @@ def root():
 
 
 @app.get("/db-test")
-async def db_test(
-    db: AsyncSession = Depends(get_db),
-):
+async def db_test(db: AsyncSession = Depends(get_db)):
     result = await db.execute(text("SELECT 1"))
-    value = result.scalar_one()
-
-    return {
-        "database": "connected",
-        "result": value,
-    }
+    return {"database": "connected", "result": result.scalar_one()}
 
 
-@app.get(
-    "/users",
-    response_model=list[UserResponse],
-)
+@app.get("/users", response_model=list[UserResponse])
 async def get_users(
     current_user: User = Depends(require_role("admin")),
     db: AsyncSession = Depends(get_db),
@@ -69,13 +59,8 @@ async def get_users(
     return result.scalars().all()
 
 
-@app.get(
-    "/executors",
-    response_model=list[ExecutorResponse],
-)
-async def get_executors(
-    db: AsyncSession = Depends(get_db),
-):
+@app.get("/executors", response_model=list[ExecutorResponse])
+async def get_executors(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Executor))
     return result.scalars().all()
 
@@ -92,9 +77,7 @@ async def register(
     result = await db.execute(
         select(User).where(User.email == data.email)
     )
-    existing_user = result.scalar_one_or_none()
-
-    if existing_user:
+    if result.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User with this email already exists",
@@ -106,18 +89,13 @@ async def register(
         password_hash=hash_password(data.password),
         role=data.role,
     )
-
     db.add(user)
     await db.commit()
     await db.refresh(user)
-
     return user
 
 
-@app.post(
-    "/auth/login",
-    response_model=TokenResponse,
-)
+@app.post("/auth/login", response_model=TokenResponse)
 async def login(
     data: LoginRequest,
     db: AsyncSession = Depends(get_db),
@@ -127,13 +105,11 @@ async def login(
     )
     user = result.scalar_one_or_none()
 
-    if not user or not user.password_hash:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
-        )
-
-    if not verify_password(data.password, user.password_hash):
+    if (
+        not user
+        or not user.password_hash
+        or not verify_password(data.password, user.password_hash)
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
@@ -141,7 +117,6 @@ async def login(
 
     access_token = create_access_token(user.id)
     refresh_token = create_refresh_token(user.id)
-
     await save_refresh_token(refresh_token, user.id)
 
     return TokenResponse(
@@ -150,16 +125,12 @@ async def login(
     )
 
 
-@app.post(
-    "/auth/refresh",
-    response_model=TokenResponse,
-)
+@app.post("/auth/refresh", response_model=TokenResponse)
 async def refresh_tokens(
     data: dict,
     db: AsyncSession = Depends(get_db),
 ):
     refresh_token = data.get("refresh_token")
-
     if not isinstance(refresh_token, str) or not refresh_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -168,15 +139,12 @@ async def refresh_tokens(
 
     try:
         payload = decode_token(refresh_token)
-
         if payload.get("type") != "refresh":
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid refresh token type",
             )
-
         user_id = int(payload["sub"])
-
     except HTTPException:
         raise
     except (InvalidTokenError, ValueError, TypeError, KeyError):
@@ -186,32 +154,25 @@ async def refresh_tokens(
         ) from None
 
     stored_user_id = await get_refresh_token_user_id(refresh_token)
-
     if stored_user_id is None or stored_user_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token is invalid or revoked",
         )
 
-    result = await db.execute(
-        select(User).where(User.id == user_id)
-    )
+    result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
-
     if user is None:
         await delete_refresh_token(refresh_token)
-
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
         )
 
-    # Отзываем старый refresh-токен перед выдачей нового.
     await delete_refresh_token(refresh_token)
 
     new_access_token = create_access_token(user.id)
     new_refresh_token = create_refresh_token(user.id)
-
     await save_refresh_token(new_refresh_token, user.id)
 
     return TokenResponse(
@@ -221,27 +182,19 @@ async def refresh_tokens(
 
 
 @app.post("/auth/logout")
-async def logout(
-    data: dict,
-):
+async def logout(data: dict):
     refresh_token = data.get("refresh_token")
-
     if not isinstance(refresh_token, str) or not refresh_token:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Refresh token is required",
         )
 
-    # Удаление из Redis делает refresh-токен недействительным.
     await delete_refresh_token(refresh_token)
-
     return {"message": "Logged out successfully"}
 
 
-@app.get(
-    "/auth/me",
-    response_model=UserResponse,
-)
+@app.get("/auth/me", response_model=UserResponse)
 async def get_me(
     current_user: User = Depends(get_current_user),
 ):
