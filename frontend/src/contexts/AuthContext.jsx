@@ -21,9 +21,11 @@ async function readResponse(response) {
 function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
   const refreshPromiseRef = useRef(null);
 
   const saveUser = useCallback((userData) => {
+    setLoggingOut(false);
     setUser(userData);
     localStorage.setItem(
       USER_STORAGE_KEY,
@@ -211,6 +213,24 @@ function AuthProvider({ children }) {
           role: meData.role,
           cars: [],
         });
+
+        if (meData.role === 'customer') {
+          const carsResponse = await authFetch('/api/cars');
+          if (carsResponse.ok && !cancelled) {
+            const cars = await carsResponse.json();
+            setUser((current) => {
+              if (!current) {
+                return current;
+              }
+              const next = { ...current, cars };
+              localStorage.setItem(
+                USER_STORAGE_KEY,
+                JSON.stringify(next),
+              );
+              return next;
+            });
+          }
+        }
       } catch (error) {
         console.error('Ошибка восстановления сессии:', error);
         if (!cancelled) {
@@ -228,7 +248,92 @@ function AuthProvider({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [clearSession, refreshAccessToken, saveUser]);
+  }, [authFetch, clearSession, refreshAccessToken, saveUser]);
+
+  const refreshCars = useCallback(async () => {
+    const response = await authFetch('/api/cars');
+
+    if (!response.ok) {
+      return;
+    }
+
+    const cars = await response.json();
+
+    setUser((current) => {
+      if (!current) {
+        return current;
+      }
+
+      const next = {
+        ...current,
+        cars,
+      };
+
+      localStorage.setItem(
+        USER_STORAGE_KEY,
+        JSON.stringify(next),
+      );
+
+      return next;
+    });
+  }, [authFetch]);
+
+  const patchUser = useCallback((partial) => {
+    setUser((current) => {
+      if (!current) {
+        return current;
+      }
+      const next = { ...current, ...partial };
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const updateProfile = useCallback(async (payload) => {
+    const response = await authFetch('/api/auth/me', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = await readResponse(response);
+
+    if (!response.ok) {
+      const detail = data.detail;
+      return {
+        success: false,
+        error: typeof detail === 'string'
+          ? detail
+          : 'Не удалось сохранить данные',
+      };
+    }
+
+    setUser((current) => {
+      if (!current) {
+        return current;
+      }
+
+      const next = {
+        ...current,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        address: data.address,
+        latitude: data.latitude,
+        longitude: data.longitude,
+      };
+
+      localStorage.setItem(
+        USER_STORAGE_KEY,
+        JSON.stringify(next),
+      );
+
+      return next;
+    });
+
+    return { success: true };
+  }, [authFetch]);
 
   const login = useCallback(async (email, password) => {
     const normalizedEmail = String(email || '')
@@ -292,6 +397,10 @@ function AuthProvider({ children }) {
 
       saveUser(loggedUser);
 
+      if (loggedUser.role === 'customer') {
+        await refreshCars();
+      }
+
       return {
         success: true,
         user: loggedUser,
@@ -306,14 +415,16 @@ function AuthProvider({ children }) {
         error: 'Не удалось подключиться к серверу.',
       };
     }
-  }, [authFetch, clearSession, saveUser]);
+  }, [authFetch, clearSession, refreshCars, saveUser]);
 
   const logout = useCallback(async () => {
     const refreshToken = localStorage.getItem(
       REFRESH_TOKEN_KEY,
     );
 
-    // Сразу очищаем локальную сессию.
+    // Кабинет закрыт ProtectedRoute. Пока сессия уже
+    // пустая, маршрут должен вести на главную, а не на логин.
+    setLoggingOut(true);
     clearSession();
 
     if (!refreshToken) {
@@ -342,7 +453,11 @@ function AuthProvider({ children }) {
         login,
         logout,
         authFetch,
+        refreshCars,
+        patchUser,
+        updateProfile,
         isLoading,
+        loggingOut,
         refreshAccessToken,
       }}
     >

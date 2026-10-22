@@ -1,5 +1,5 @@
 from app.db.database import Base, engine
-from app.models import User
+from app.models import Car, Executor, Order, User
 import asyncio
 
 

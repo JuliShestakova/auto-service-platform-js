@@ -1,4 +1,4 @@
-from sqlalchemy import String
+from sqlalchemy import Float, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.database import Base
@@ -15,3 +15,6 @@ class User(Base):
         nullable=True,
     )
     role: Mapped[str] = mapped_column(String(50))
+    address: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    longitude: Mapped[float | None] = mapped_column(Float, nullable=True)

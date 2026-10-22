@@ -60,7 +60,9 @@ function ExecutorsPage() {
             <h2>{executor.name}</h2>
 
             <p>
-              ⭐ {executor.rating} · {executor.reviews} отзывов
+              <Link to={`/executors/${executor.id}#reviews`}>
+                ⭐ {executor.rating} · {executor.reviews || 0} отзывов
+              </Link>
             </p>
 
             <p>

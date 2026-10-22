@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 function LoginPage({
@@ -8,6 +8,7 @@ function LoginPage({
   onSwitchToRegister,
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { login } = useAuth();
 
@@ -46,6 +47,12 @@ function LoginPage({
     }
 
     setIsLoading(false);
+
+    const redirectTo = location.state?.from;
+    if (typeof redirectTo === 'string' && redirectTo.startsWith('/')) {
+      navigate(redirectTo);
+      return;
+    }
 
     if (user?.role === 'admin') {
       navigate('/admin');

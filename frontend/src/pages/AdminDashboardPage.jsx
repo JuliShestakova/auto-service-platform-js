@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import logoImage from '../assets/logo.png';
+import SiteHeader from '../components/SiteHeader';
 
 
 function Icon({ type }) {
@@ -78,97 +79,99 @@ function Icon({ type }) {
 
 
 /* =====================================================
-   ДЕМО-ДАННЫЕ
-===================================================== */
-
-const users = [
-  {
-    id: 1,
-    name: 'Иван Петров',
-    email: 'ivan@example.ru',
-    role: 'Клиент',
-    status: 'Активен',
-  },
-  {
-    id: 2,
-    name: 'Автосервис Мотор',
-    email: 'motor@example.ru',
-    role: 'Автосервис',
-    status: 'На проверке',
-  },
-  {
-    id: 3,
-    name: 'Марина Кузнецова',
-    email: 'marina@example.ru',
-    role: 'Клиент',
-    status: 'Активен',
-  },
-  {
-    id: 4,
-    name: 'АвтоПрофи',
-    email: 'pro@example.ru',
-    role: 'Автосервис',
-    status: 'Активен',
-  },
-];
-
-
-const orders = [
-  {
-    id: 1024,
-    title: 'Замена тормозных колодок',
-    customer: 'Иван Петров',
-    executor: 'Не выбран',
-    status: 'Поиск исполнителя',
-  },
-  {
-    id: 1023,
-    title: 'Диагностика двигателя',
-    customer: 'Марина Кузнецова',
-    executor: 'Автосервис Мотор',
-    status: 'В работе',
-  },
-  {
-    id: 1022,
-    title: 'Замена масла',
-    customer: 'Алексей Смирнов',
-    executor: 'АвтоПрофи',
-    status: 'Завершён',
-  },
-];
-
-
-const services = [
-  {
-    name: 'Автосервис Мотор',
-    city: 'Краснодар',
-    rating: '4.9',
-    status: 'Активен',
-  },
-  {
-    name: 'АвтоПрофи',
-    city: 'Краснодар',
-    rating: '4.8',
-    status: 'Активен',
-  },
-  {
-    name: 'Garage Pro',
-    city: 'Краснодар',
-    rating: '4.7',
-    status: 'На проверке',
-  },
-];
-
-
-/* =====================================================
    КАБИНЕТ АДМИНИСТРАТОРА
 ===================================================== */
 
 export default function AdminDashboardPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, authFetch } = useAuth();
 
   const navigate = useNavigate();
   const location = useLocation();
+  const [users, setUsers] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [services, setServices] = useState([]);
+
+  const roleLabel = (role) => {
+    if (role === 'admin') {
+      return 'Администратор';
+    }
+
+    if (role === 'executor') {
+      return 'Автосервис';
+    }
+
+    return 'Клиент';
+  };
+
+  const loadAdminData = async () => {
+    const [usersResponse, ordersResponse, servicesResponse] =
+      await Promise.all([
+        authFetch('/api/users'),
+        authFetch('/api/orders'),
+        fetch('/api/executors?pending=true'),
+      ]);
+
+    if (usersResponse.ok) {
+      const data = await usersResponse.json();
+      setUsers(data.map((item) => ({
+        id: item.id,
+        name: item.name,
+        email: item.email,
+        role: roleLabel(item.role),
+        status: 'Активен',
+      })));
+    }
+
+    if (ordersResponse.ok) {
+      const data = await ordersResponse.json();
+      setOrders(data.map((item) => ({
+        id: item.id,
+        title: item.title,
+        customer: item.customer_name,
+        executor: item.executor_name || 'Не выбран',
+        status: item.status,
+      })));
+    }
+
+    if (servicesResponse.ok) {
+      const data = await servicesResponse.json();
+      setServices(data.map((item) => ({
+        id: item.id,
+        name: item.name,
+        city: item.address,
+        rating: String(item.rating),
+        status: item.status === 'На проверке'
+          ? 'На проверке'
+          : 'Активен',
+        rawStatus: item.status,
+      })));
+    }
+  };
+
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      loadAdminData();
+    }
+  }, [user]);
+
+  const approveExecutor = async (executorId) => {
+    const response = await authFetch(
+      `/api/executors/${executorId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'Открыто',
+        }),
+      },
+    );
+
+    if (response.ok) {
+      await loadAdminData();
+    }
+  };
 
 
   /* =====================================================
@@ -209,80 +212,36 @@ export default function AdminDashboardPage() {
   const section = getSectionFromPath();
 
 
-  /* =====================================================
-     ДАННЫЕ ПОЛЬЗОВАТЕЛЯ
-  ===================================================== */
-
-  const firstName =
-    user?.name?.split(' ')[0] ||
-    'Администратор';
-
-
-  const initials =
-    user?.name
-      ?.split(' ')
-      .map((x) => x[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase() ||
-    'AD';
-
-
-  /* =====================================================
-     ВЫХОД
-  ===================================================== */
-
   const handleLogout = () => {
+    navigate('/', { replace: true });
     if (typeof logout === 'function') {
       logout();
     }
-
-    navigate('/');
   };
-
-
-  /* =====================================================
-     ЕСЛИ НЕ АВТОРИЗОВАН
-  ===================================================== */
 
   if (!user) {
     return (
       <div className="role-dashboard-page">
-
-        <RoleHeader
-          firstName="Гость"
-          initials="AD"
-          onLogout={() => navigate('/login')}
+        <SiteHeader
+          onLogin={() => navigate('/login')}
+          onRegister={() => navigate('/register')}
         />
 
         <main className="role-dashboard-auth">
-
           <div className="role-empty-card">
-
             <div className="role-empty-icon">
               <Icon type="shield" />
             </div>
-
-            <h1>
-              Войдите в аккаунт
-            </h1>
-
+            <h1>Войдите в аккаунт</h1>
             <p>
               Панель администратора доступна
               после авторизации.
             </p>
-
-            <Link
-              className="primary-button"
-              to="/login"
-            >
+            <Link className="primary-button" to="/login">
               Войти →
             </Link>
-
           </div>
-
         </main>
-
       </div>
     );
   }
@@ -333,17 +292,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="role-dashboard-page admin-dashboard">
-
-      {/* =====================================================
-          ШАПКА
-      ===================================================== */}
-
-      <RoleHeader
-        firstName={firstName}
-        initials={initials}
-        onLogout={handleLogout}
-      />
-
+      <SiteHeader />
 
       <main className="role-dashboard-layout">
 
@@ -479,27 +428,33 @@ export default function AdminDashboardPage() {
 
                 <Stat
                   label="Пользователи"
-                  value="1 284"
-                  note="+42 за месяц"
+                  value={String(users.length)}
+                  note="зарегистрировано"
                 />
 
                 <Stat
                   label="Автосервисы"
-                  value="86"
-                  note="4 на проверке"
+                  value={String(services.length)}
+                  note={`${services.filter((item) => item.status === 'На проверке').length} на проверке`}
                   accent
                 />
 
                 <Stat
                   label="Заказы"
-                  value="3 412"
-                  note="128 активных"
+                  value={String(orders.length)}
+                  note="всего в базе"
                 />
 
                 <Stat
                   label="Завершено"
-                  value="92%"
-                  note="за последние 30 дней"
+                  value={
+                    orders.length
+                      ? `${Math.round(
+                        (orders.filter((item) => item.status === 'Завершён').length / orders.length) * 100
+                      )}%`
+                      : '0%'
+                  }
+                  note="от всех заказов"
                 />
 
               </div>
@@ -509,11 +464,11 @@ export default function AdminDashboardPage() {
 
                 <DashboardCard
                   title="Последние заказы"
-                  label="3 последних"
+                  label={`${Math.min(orders.length, 3)} последних`}
                   action="Все заказы →"
                   onAction={() => navigate('/admin/orders')}
                 >
-                  <AdminOrderList />
+                  <AdminOrderList items={orders.slice(0, 3)} />
                 </DashboardCard>
 
 
@@ -557,10 +512,10 @@ export default function AdminDashboardPage() {
           {section === 'orders' && (
             <DashboardCard
               title="Все заказы"
-              label={`${orders.length} в демо-данных`}
+              label={`${orders.length} в базе`}
               wide
             >
-              <AdminOrderList />
+              <AdminOrderList items={orders} />
             </DashboardCard>
           )}
 
@@ -572,7 +527,7 @@ export default function AdminDashboardPage() {
           {section === 'users' && (
             <DashboardCard
               title="Пользователи платформы"
-              label={`${users.length} в демо-данных`}
+              label={`${users.length} в базе`}
               wide
             >
 
@@ -654,7 +609,7 @@ export default function AdminDashboardPage() {
           {section === 'services' && (
             <DashboardCard
               title="Автосервисы"
-              label={`${services.length} в демо-данных`}
+              label={`${services.length} в базе`}
               wide
             >
 
@@ -729,29 +684,23 @@ export default function AdminDashboardPage() {
           {section === 'moderation' && (
             <DashboardCard
               title="Объекты на проверке"
-              label="3 требуют внимания"
+              label={`${services.filter((item) => item.status === 'На проверке').length} требуют внимания`}
               wide
             >
 
               <div className="moderation-list large">
 
-                <ModerationItem
-                  title="Автосервис Garage Pro"
-                  note="Проверка документов нового исполнителя"
-                  action="Проверить"
-                />
-
-                <ModerationItem
-                  title="АвтоМастер"
-                  note="Изменение реквизитов организации"
-                  action="Открыть"
-                />
-
-                <ModerationItem
-                  title="Жалоба #184"
-                  note="Клиент сообщил о проблеме с заказом #1012"
-                  action="Разобрать"
-                />
+                {services
+                  .filter((item) => item.status === 'На проверке')
+                  .map((item) => (
+                    <ModerationItem
+                      key={item.id}
+                      title={item.name}
+                      note={item.city}
+                      action="Одобрить"
+                      onAction={() => approveExecutor(item.id)}
+                    />
+                  ))}
 
               </div>
 
@@ -850,84 +799,6 @@ function AdminNav({
 
 
 /* =====================================================
-   ШАПКА
-===================================================== */
-
-function RoleHeader({
-  firstName,
-  initials,
-  onLogout,
-}) {
-  return (
-    <header className="role-header">
-
-      <div className="role-header-inner">
-
-        {/* ЛОГОТИП ВЕДЁТ В ОБЗОР АДМИНИСТРАТОРА */}
-
-        <Link
-          to="/admin"
-          className="role-logo"
-        >
-          <img
-            src={logoImage}
-            alt="Автосервис рядом"
-          />
-
-          <span>
-            <strong>
-              Автосервис
-            </strong>
-
-            <b>
-              {' '}рядом
-            </b>
-          </span>
-
-        </Link>
-
-
-        <nav className="role-header-nav">
-
-          <Link to="/">
-            Главная
-          </Link>
-
-          <Link to="/executors">
-            Автосервисы
-          </Link>
-
-        </nav>
-
-
-        <div className="role-header-user">
-
-          <span className="role-header-avatar">
-            {initials}
-          </span>
-
-          <span>
-            {firstName}
-          </span>
-
-          <button
-            type="button"
-            onClick={onLogout}
-            aria-label="Выйти"
-          >
-            <Icon type="logout" />
-          </button>
-
-        </div>
-
-      </div>
-
-    </header>
-  );
-}
-
-
-/* =====================================================
    СТАТИСТИКА
 ===================================================== */
 
@@ -1018,11 +889,11 @@ function DashboardCard({
    СПИСОК ЗАКАЗОВ
 ===================================================== */
 
-function AdminOrderList() {
+function AdminOrderList({ items }) {
   return (
     <div className="role-list">
 
-      {orders.map((item) => (
+      {items.map((item) => (
 
         <article
           className="admin-order-row"
@@ -1084,6 +955,7 @@ function ModerationItem({
   title,
   note,
   action,
+  onAction,
 }) {
   return (
     <article className="moderation-item">
@@ -1109,6 +981,7 @@ function ModerationItem({
         <button
           type="button"
           className="customer-outline-button"
+          onClick={onAction}
         >
           {action}
         </button>

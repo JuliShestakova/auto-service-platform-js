@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
 from app.db.database import Base
-from app.models import User, Executor
+from app.models import Car, Executor, Order, User
 
 
 config = context.config

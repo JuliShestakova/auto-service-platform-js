@@ -6,6 +6,9 @@ class UserResponse(BaseModel):
     name: str
     email: str
     role: str
+    address: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
 
     model_config = {
         "from_attributes": True

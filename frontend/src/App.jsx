@@ -9,17 +9,29 @@ import {
 } from 'react-router-dom';
 
 import { AuthProvider } from './contexts/AuthContext';
+import { CityProvider, useCity } from './contexts/CityContext';
+import { LocationProvider } from './contexts/LocationContext';
+import { DEFAULT_CITY } from './data/cities';
+import MapPage from './pages/MapPage';
+
+function CitySearchRedirect() {
+  const { city } = useCity();
+  return (
+    <Navigate
+      to={`/search?city=${encodeURIComponent(city || DEFAULT_CITY)}`}
+      replace
+    />
+  );
+}
 
 import HomePage from './pages/HomePage';
+import SearchPage from './pages/SearchPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 
-import CreateOrderPage from './pages/CreateOrderPage';
+import CustomerDashboardPage from './pages/CustomerDashboardPage';
 
-import ExecutorsPage from './pages/ExecutorsPage';
 import ExecutorDetailsPage from './pages/ExecutorDetailsPage';
-
-import MapPage from './pages/MapPage';
 
 import ExecutorDashboardPage from './pages/ExecutorDashboardPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
@@ -85,6 +97,8 @@ function App() {
 
   return (
     <AuthProvider>
+      <CityProvider>
+      <LocationProvider>
 
       <BrowserRouter>
 
@@ -94,6 +108,16 @@ function App() {
           {/* =====================================================
               ГЛАВНАЯ СТРАНИЦА
               ===================================================== */}
+
+          <Route
+            path="/search"
+            element={
+              <SearchPage
+                onLogin={openLogin}
+                onRegister={openRegister}
+              />
+            }
+          />
 
           <Route
             path="/"
@@ -122,69 +146,12 @@ function App() {
 
             <Route
               path="/customer"
-              element={
-                <HomePage
-                  section="overview"
-                  onLogin={openLogin}
-                  onRegister={openRegister}
-                />
-              }
-            />
-
-            <Route
-              path="/customer/orders"
-              element={
-                <HomePage
-                  section="orders"
-                  onLogin={openLogin}
-                  onRegister={openRegister}
-                />
-              }
-            />
-
-            <Route
-              path="/customer/requests"
-              element={
-                <HomePage
-                  section="requests"
-                  onLogin={openLogin}
-                  onRegister={openRegister}
-                />
-              }
-            />
-
-            <Route
-              path="/customer/garage"
-              element={
-                <HomePage
-                  section="garage"
-                  onLogin={openLogin}
-                  onRegister={openRegister}
-                />
-              }
+              element={<CustomerDashboardPage section="overview" />}
             />
 
             <Route
               path="/customer/settings"
-              element={
-                <HomePage
-                  section="settings"
-                  onLogin={openLogin}
-                  onRegister={openRegister}
-                />
-              }
-            />
-
-            {/* =================================================
-                СОЗДАНИЕ ЗАКАЗА
-                ТОЛЬКО ДЛЯ CUSTOMER
-                ================================================= */}
-
-            <Route
-              path="/customer/orders/new"
-              element={
-                <CreateOrderPage />
-              }
+              element={<CustomerDashboardPage section="settings" />}
             />
 
           </Route>
@@ -195,10 +162,50 @@ function App() {
               ===================================================== */}
 
           <Route
+            path="/customer/bookings"
+            element={
+              <Navigate
+                to="/customer"
+                replace
+              />
+            }
+          />
+
+          <Route
+            path="/customer/requests"
+            element={
+              <Navigate
+                to="/customer"
+                replace
+              />
+            }
+          />
+
+          <Route
             path="/orders"
             element={
               <Navigate
-                to="/customer/orders"
+                to="/customer"
+                replace
+              />
+            }
+          />
+
+          <Route
+            path="/customer/orders"
+            element={
+              <Navigate
+                to="/customer"
+                replace
+              />
+            }
+          />
+
+          <Route
+            path="/customer/orders/new"
+            element={
+              <Navigate
+                to="/search"
                 replace
               />
             }
@@ -208,7 +215,7 @@ function App() {
             path="/requests"
             element={
               <Navigate
-                to="/customer/requests"
+                to="/customer"
                 replace
               />
             }
@@ -218,7 +225,17 @@ function App() {
             path="/garage"
             element={
               <Navigate
-                to="/customer/garage"
+                to="/customer"
+                replace
+              />
+            }
+          />
+
+          <Route
+            path="/customer/garage"
+            element={
+              <Navigate
+                to="/customer"
                 replace
               />
             }
@@ -261,9 +278,7 @@ function App() {
 
           <Route
             path="/executors"
-            element={
-              <ExecutorsPage />
-            }
+            element={<CitySearchRedirect />}
           />
 
           <Route
@@ -281,7 +296,10 @@ function App() {
           <Route
             path="/map"
             element={
-              <MapPage />
+              <MapPage
+                onLogin={openLogin}
+                onRegister={openRegister}
+              />
             }
           />
 
@@ -409,6 +427,8 @@ function App() {
 
       </BrowserRouter>
 
+      </LocationProvider>
+      </CityProvider>
     </AuthProvider>
   );
 }

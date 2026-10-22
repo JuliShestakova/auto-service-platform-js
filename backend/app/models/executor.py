@@ -1,4 +1,4 @@
-from sqlalchemy import Float, String
+from sqlalchemy import Float, ForeignKey, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -9,12 +9,21 @@ class Executor(Base):
     __tablename__ = "executors"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"),
+        unique=True,
+        nullable=True,
+    )
     name: Mapped[str] = mapped_column(String(100))
     rating: Mapped[float] = mapped_column(Float)
     reviews: Mapped[int] = mapped_column()
     price: Mapped[str] = mapped_column(String(100))
     address: Mapped[str] = mapped_column(String(255))
+    city: Mapped[str] = mapped_column(String(100), default="Краснодар")
     status: Mapped[str] = mapped_column(String(50))
     hours: Mapped[str] = mapped_column(String(50))
     description: Mapped[str] = mapped_column(String(1000))
     services: Mapped[list] = mapped_column(JSONB)
+    phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    longitude: Mapped[float | None] = mapped_column(Float, nullable=True)

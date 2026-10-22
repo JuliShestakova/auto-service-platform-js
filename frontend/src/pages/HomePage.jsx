@@ -1,14 +1,213 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useCity } from '../contexts/CityContext';
+import FavoriteButton from '../components/FavoriteButton';
+import ServiceCardModal from '../components/ServiceCardModal';
+import ServiceSuggest from '../components/ServiceSuggest';
+import SiteHeader from '../components/SiteHeader';
+import useFavorites from '../hooks/useFavorites';
+import {
+  SERVICE_ALIASES,
+  SERVICE_CATALOG,
+} from '../data/serviceCatalog';
+import { resolveBestService } from '../utils/fuzzyService';
 
 import bannerImage from '../assets/auto-service-banner.png';
-import logoImage from '../assets/logo.png';
+import logoImage from '../assets/logo-header.png';
+import serviceOil from '../assets/services/oil-change.jpg';
+import serviceBrakes from '../assets/services/brake-pads.jpg';
+import serviceDiagnostics from '../assets/services/diagnostics.png';
+import serviceTires from '../assets/services/tire-service.png';
+import serviceEngine from '../assets/services/engine-repair.jpg';
+import serviceAc from '../assets/services/ac-refill.jpg';
+import shopImage1 from '../assets/shops/shop-1.jpg';
+import shopImage2 from '../assets/shops/shop-2.jpg';
+import shopImage3 from '../assets/shops/shop-3.jpg';
+import shopImage4 from '../assets/shops/shop-4.jpg';
+import shopImage5 from '../assets/shops/shop-5.jpg';
+import shopImage6 from '../assets/shops/shop-6.jpg';
+import shopImage7 from '../assets/shops/shop-7.jpg';
+import shopImage8 from '../assets/shops/shop-8.jpg';
+
+const SHOP_IMAGES = [
+  shopImage1,
+  shopImage2,
+  shopImage3,
+  shopImage4,
+  shopImage5,
+  shopImage6,
+  shopImage7,
+  shopImage8,
+];
+
+function ServiceOilIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M8 10.5c0-1.5 1.2-3.2 2.4-4.2L12 5l1.6 1.3C14.8 7.3 16 9 16 10.5V18a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-7.5Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path d="M10 14h4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ServiceBrakeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="7.2" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="12" cy="12" r="2.2" stroke="currentColor" strokeWidth="1.7" />
+      <path
+        d="M12 4.8v2.2M12 17v2.2M4.8 12h2.2M17 12h2.2"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function ServiceLaptopIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="4.5" y="5" width="15" height="11" rx="1.6" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M3 18.5h18" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M9 9.5h6M9 12.5h4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ServiceTireIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="7.5" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.7" />
+      <path
+        d="m12 5.2 1.1 2.8M12 18.8l-1.1-2.8M5.2 12l2.8-1.1M18.8 12l-2.8 1.1"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function ServiceEngineIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M4 11h3l2-2h4l2 2h3v5H4v-5Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path d="M8 9V6.5h5V9M17 12.5h2.5V15M4.5 13.5H3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ServiceAcIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 3.5v17" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="m5.2 7.2 13.6 9.6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M18.8 7.2 5.2 16.8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="2" stroke="currentColor" strokeWidth="1.7" />
+    </svg>
+  );
+}
+
+function ServiceArrowIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M9 6.5 15 12l-6 5.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+const POPULAR_SERVICES = [
+  { name: 'Замена масла', image: serviceOil, price: 'от 1 000 ₽', Icon: ServiceOilIcon },
+  { name: 'Замена тормозных колодок', image: serviceBrakes, price: 'от 2 500 ₽', Icon: ServiceBrakeIcon },
+  { name: 'Компьютерная диагностика', image: serviceDiagnostics, price: 'от 1 500 ₽', Icon: ServiceLaptopIcon },
+  { name: 'Шиномонтаж', image: serviceTires, price: 'от 1 200 ₽', Icon: ServiceTireIcon },
+  { name: 'Ремонт двигателя', image: serviceEngine, price: 'от 5 000 ₽', Icon: ServiceEngineIcon },
+  { name: 'Заправка кондиционера', image: serviceAc, price: 'от 2 000 ₽', Icon: ServiceAcIcon },
+];
 
 
 /* =====================================================
    ИКОНКИ
 ===================================================== */
+
+function matchesWorkName(name, query) {
+  return String(name)
+    .toLocaleLowerCase('ru')
+    .includes(query);
+}
+
+function getMatchedWorks(service, query) {
+  if (!query || !Array.isArray(service?.services)) {
+    return [];
+  }
+
+  return service.services.filter(
+    (item) =>
+      Array.isArray(item) &&
+      matchesWorkName(item[0], query)
+  );
+}
+
+function orderStatusType(status) {
+  if (status === 'В работе') {
+    return 'progress';
+  }
+
+  if (status === 'Запланирован') {
+    return 'planned';
+  }
+
+  if (status === 'Ожидает подтверждения') {
+    return 'search';
+  }
+
+  if (status === 'Завершён') {
+    return 'done';
+  }
+
+  return 'search';
+}
+
+function mapOrder(order) {
+  return {
+    id: order.id,
+    title: order.title,
+    status: order.status,
+    statusType: orderStatusType(order.status),
+    car: order.car_label,
+    executorName: order.executor_name,
+    executorRating: order.executor_rating,
+    executorId: order.executor_id,
+    visitDate: order.visit_date,
+    visitTime: order.visit_time,
+  };
+}
+
+function readApiError(data, fallback) {
+  if (typeof data?.detail === 'string') {
+    return data.detail;
+  }
+
+  return fallback;
+}
 
 function SearchIcon() {
   return (
@@ -23,6 +222,94 @@ function SearchIcon() {
     >
       <circle cx="11" cy="11" r="7" />
       <path d="m20 20-4-4" />
+    </svg>
+  );
+}
+
+function WrenchIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+    </svg>
+  );
+}
+
+function ArrowRightIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M5 12h14" />
+      <path d="m13 6 6 6-6 6" />
+    </svg>
+  );
+}
+
+function ShieldCheckIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+function PercentIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <line x1="19" y1="5" x2="5" y2="19" />
+      <circle cx="6.5" cy="6.5" r="2.5" />
+      <circle cx="17.5" cy="17.5" r="2.5" />
+    </svg>
+  );
+}
+
+function CalendarIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M16 2v4" />
+      <path d="M8 2v4" />
+      <path d="M3 10h18" />
+      <circle cx="12" cy="15" r="1.5" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -133,41 +420,6 @@ function CarIcon() {
 }
 
 
-function CalendarIcon() {
-  return (
-    <svg
-      viewBox="0 0 48 48"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <rect
-        x="7"
-        y="9"
-        width="34"
-        height="32"
-        rx="4"
-      />
-
-      <path d="M14 5v8" />
-      <path d="M34 5v8" />
-      <path d="M7 18h34" />
-
-      <circle cx="16" cy="25" r="1" />
-      <circle cx="24" cy="25" r="1" />
-      <circle cx="32" cy="25" r="1" />
-
-      <circle cx="16" cy="33" r="1" />
-      <circle cx="24" cy="33" r="1" />
-      <circle cx="32" cy="33" r="1" />
-    </svg>
-  );
-}
-
-
 function StarIcon() {
   return (
     <svg
@@ -187,23 +439,11 @@ function StarIcon() {
 
 function HeaderLogo() {
   return (
-    <div className="logo-brand">
-      <img
-        className="logo-image"
-        src={logoImage}
-        alt="Автосервис рядом"
-      />
-
-      <span className="logo-text">
-        <span className="logo-text-black">
-          Автосервис
-        </span>
-
-        <span className="logo-text-coral">
-          рядом
-        </span>
-      </span>
-    </div>
+    <img
+      className="logo-image"
+      src={logoImage}
+      alt="Найти автосервис"
+    />
   );
 }
 
@@ -217,6 +457,9 @@ function HeaderLogo() {
 ===================================================== */
 
 function Footer() {
+  const { city } = useCity();
+  const searchTo = `/search?city=${encodeURIComponent(city)}`;
+
   return (
     <footer className="site-footer">
       <div className="site-footer-inner">
@@ -225,38 +468,71 @@ function Footer() {
             <HeaderLogo />
           </Link>
           <p className="site-footer-description">
-            Находим автосервис,<br />
-            которому можно доверять.
+            Надёжные автосервисы рядом. Сравнивайте,
+            выбирайте и записывайтесь онлайн.
           </p>
         </div>
 
         <div className="site-footer-column">
-          <h4>Клиентам</h4>
-          <Link to="/">Найти сервис</Link>
-          <Link to="/customer/orders/new">Создать заказ</Link>
-          <Link to="/orders">Мои заказы</Link>
-          <Link to="/requests">Мои заявки</Link>
-          <Link to="/garage">Мой гараж</Link>
+          <h4>Сервис</h4>
+          <Link to={searchTo}>Найти автосервис</Link>
+          <a href="/#services">Услуги</a>
+          <Link to="/map">Карта автосервисов</Link>
+          <a href="/#services">Популярные услуги</a>
         </div>
 
         <div className="site-footer-column">
-          <h4>Автосервисам</h4>
-          <Link to="/executor">Кабинет автосервиса</Link>
+          <h4>Информация</h4>
+          <Link to="/register">Для автосервисов</Link>
+          <a href="#faq">Вопросы и ответы</a>
+          <a href="#blog">Блог</a>
         </div>
 
         <div className="site-footer-column">
-          <h4>Помощь</h4>
-          <a href="/#services">Как это работает</a>
-          <a href="/#services">Найти автосервис</a>
-          <Link to="/customer/orders/new">Создать заказ</Link>
+          <h4>О проекте</h4>
+          <a href="#about">О нас</a>
+          <a href="#partners">Партнёрам</a>
+          <a href="#terms">Пользовательское соглашение</a>
+          <a href="#privacy">Политика конфиденциальности</a>
+        </div>
+
+        <div className="site-footer-perks">
+          <div>
+            <span className="site-footer-perk-icon" aria-hidden="true">
+              <ShieldCheckIcon />
+            </span>
+            <div>
+              <strong>Проверенные автосервисы</strong>
+              <span>Реальные отзывы и рейтинг</span>
+            </div>
+          </div>
+          <div>
+            <span className="site-footer-perk-icon" aria-hidden="true">
+              <PercentIcon />
+            </span>
+            <div>
+              <strong>Прозрачные цены</strong>
+              <span>Сравнивайте стоимость услуг</span>
+            </div>
+          </div>
+          <div>
+            <span className="site-footer-perk-icon" aria-hidden="true">
+              <CalendarIcon />
+            </span>
+            <div>
+              <strong>Удобная запись</strong>
+              <span>Выберите дату и время онлайн</span>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="site-footer-bottom">
-        <span>© 2026 Автосервис рядом</span>
-        <div className="site-footer-bottom-links">
-          <a href="#">Политика конфиденциальности</a>
-          <a href="#">Пользовательское соглашение</a>
+        <span>© 2026 Найти Автосервис. Все права защищены.</span>
+        <div className="site-footer-socials" aria-label="Соцсети">
+          <a href="https://vk.com" target="_blank" rel="noreferrer" aria-label="ВКонтакте">VK</a>
+          <a href="https://t.me" target="_blank" rel="noreferrer" aria-label="Telegram">TG</a>
+          <a href="https://youtube.com" target="_blank" rel="noreferrer" aria-label="YouTube">YT</a>
         </div>
       </div>
     </footer>
@@ -275,20 +551,30 @@ function HomePage({
   const {
     user,
     logout,
+    authFetch,
+    refreshCars,
+    updateProfile,
   } = useAuth();
+  const { city } = useCity();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   const navigate = useNavigate();
-
-  const [profileOpen, setProfileOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
 
   const [selectedService, setSelectedService] =
     useState(null);
+  const [detailsFocus, setDetailsFocus] = useState('booking');
+  const [modalReviews, setModalReviews] = useState([]);
+  const [modalReviewsLoading, setModalReviewsLoading] = useState(false);
 
   const [services, setServices] = useState([]);
   const [servicesLoading, setServicesLoading] = useState(true);
   const [servicesError, setServicesError] = useState('');
+  const [catalogNames, setCatalogNames] = useState(SERVICE_CATALOG);
+  const [workQuery, setWorkQuery] = useState('');
+  const [heroWork, setHeroWork] = useState('');
+  const [headerScrolled, setHeaderScrolled] = useState(false);
 
   const [bookingService, setBookingService] =
     useState('');
@@ -299,11 +585,24 @@ function HomePage({
   const [bookingTime, setBookingTime] =
     useState('');
 
-  const [bookingCarId, setBookingCarId] =
-    useState('');
-
   const [showBookingAuth, setShowBookingAuth] =
     useState(false);
+
+  const [orders, setOrders] = useState([]);
+  const [showCarForm, setShowCarForm] = useState(false);
+  const [carDraft, setCarDraft] = useState({
+    brand: '',
+    model: '',
+    year: '',
+    mileage: '',
+    vin: '',
+  });
+  const [cabinetError, setCabinetError] = useState('');
+  const [settingsMode, setSettingsMode] = useState('');
+  const [settingsName, setSettingsName] = useState('');
+  const [settingsEmail, setSettingsEmail] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
 
   const customerCars = user?.cars || [];
@@ -314,49 +613,63 @@ function HomePage({
   const isGarage = section === 'garage';
   const isSettings = section === 'settings';
 
-  const orders = [
-    {
-      id: 1,
-      title: 'Замена тормозных колодок',
-      status: 'В поиске исполнителя',
-      statusType: 'search',
-      car: customerCars[0]
-        ? `${customerCars[0].brand || ''} ${customerCars[0].model || ''}, ${customerCars[0].year || ''}`.trim()
-        : 'Автомобиль не указан',
-    },
-  ];
+  const requests = orders
+    .filter((order) => order.executorName)
+    .map((order) => ({
+      id: order.id,
+      service: order.executorName,
+      rating: order.executorRating ?? '—',
+      serviceName: order.title,
+      price: order.visitDate
+        ? `${order.visitDate}${order.visitTime ? `, ${order.visitTime}` : ''}`
+        : 'Дата не выбрана',
+      executorId: order.executorId,
+    }));
 
-  const requests = [
-    {
-      id: 1,
-      service: 'Автосервис Мотор',
-      rating: '4.9',
-      serviceName: 'Замена тормозных колодок',
-      price: '2 500 ₽',
-    },
-  ];
+  useEffect(() => {
+    const onScroll = () => {
+      setHeaderScrolled(window.scrollY > 24);
+    };
 
-  const firstName =
-    user?.name?.split(' ')[0] ||
-    user?.firstName ||
-    'Пользователь';
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
-  const initials =
-    user?.name
-      ?.split(' ')
-      .map((word) => word[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase() || 'И';
-
-  const handleLogout = () => {
-    setProfileOpen(false);
-
-    if (typeof logout === 'function') {
-      logout();
+  useEffect(() => {
+    if (!user || user.role !== 'customer') {
+      setOrders([]);
+      return undefined;
     }
 
-    navigate('/');
+    let cancelled = false;
+
+    const loadOrders = async () => {
+      const response = await authFetch('/api/orders');
+
+      if (!response.ok || cancelled) {
+        return;
+      }
+
+      const data = await response.json();
+
+      if (!cancelled) {
+        setOrders(data.map(mapOrder));
+      }
+    };
+
+    loadOrders();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, authFetch]);
+
+  const handleLogout = async () => {
+    navigate('/', { replace: true });
+    if (typeof logout === 'function') {
+      await logout();
+    }
   };
 
 
@@ -370,7 +683,9 @@ function HomePage({
         setServicesLoading(true);
         setServicesError('');
 
-        const response = await fetch('/api/executors');
+        const response = await fetch(
+          `/api/executors?city=${encodeURIComponent(city)}`
+        );
 
         if (!response.ok) {
           throw new Error('Не удалось загрузить автосервисы');
@@ -391,47 +706,88 @@ function HomePage({
     };
 
     fetchServices();
-  }, []);
-
-
-  /* =====================================================
-     АВТОМОБИЛЬ ПО УМОЛЧАНИЮ
-  ===================================================== */
+  }, [city]);
 
   useEffect(() => {
-    if (!user) {
-      setBookingCarId('');
+    const loadCatalog = async () => {
+      try {
+        const response = await fetch('/api/services');
+        if (!response.ok) {
+          return;
+        }
+        const data = await response.json();
+        const names = data
+          .map((item) => item?.name)
+          .filter(Boolean);
+        if (names.length) {
+          setCatalogNames(names);
+        }
+      } catch {
+        // оставляем локальный каталог
+      }
+    };
+
+    loadCatalog();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedService?.id) {
+      setModalReviews([]);
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const loadReviews = async () => {
+      setModalReviewsLoading(true);
+      try {
+        const response = await fetch(
+          `/api/executors/${selectedService.id}/reviews`
+        );
+        if (!response.ok) {
+          throw new Error('reviews');
+        }
+        const data = await response.json();
+        if (!cancelled) {
+          setModalReviews(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setModalReviews([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setModalReviewsLoading(false);
+        }
+      }
+    };
+
+    loadReviews();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedService?.id]);
+
+  useEffect(() => {
+    const executorId = new URLSearchParams(
+      window.location.search
+    ).get('executor');
+
+    if (!executorId || services.length === 0) {
       return;
     }
 
-    if (customerCars.length === 0) {
-      setBookingCarId('');
-      return;
-    }
-
-    const exists = customerCars.some(
-      (car) =>
-        String(car.id) === String(bookingCarId)
+    const found = services.find(
+      (item) => String(item.id) === executorId
     );
 
-    if (!exists) {
-      setBookingCarId(
-        String(customerCars[0].id)
-      );
+    if (found && !selectedService) {
+      setSelectedService(found);
+      setDetailsFocus('booking');
     }
-  }, [
-    user,
-    customerCars,
-    bookingCarId,
-  ]);
-
-
-  const selectedBookingCar =
-    customerCars.find(
-      (car) =>
-        String(car.id) ===
-        String(bookingCarId)
-    );
+    // открываем карточку один раз по ?executor=
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [services]);
 
 
   /* =====================================================
@@ -440,16 +796,34 @@ function HomePage({
 
   const servicesPerPage = 10;
 
+  const normalizedWorkQuery = workQuery
+    .trim()
+    .toLocaleLowerCase('ru');
+
+  const filteredServices = normalizedWorkQuery
+    ? services.filter(
+        (service) =>
+          getMatchedWorks(
+            service,
+            normalizedWorkQuery
+          ).length > 0
+      )
+    : services;
+
   const totalPages = Math.ceil(
-    services.length / servicesPerPage
+    filteredServices.length / servicesPerPage
   );
 
+  const safePage = totalPages > 0
+    ? Math.min(currentPage, totalPages)
+    : 1;
+
   const startIndex =
-    (currentPage - 1) *
+    (safePage - 1) *
     servicesPerPage;
 
   const visibleServices =
-    services.slice(
+    filteredServices.slice(
       startIndex,
       startIndex + servicesPerPage
     );
@@ -460,16 +834,50 @@ function HomePage({
   ===================================================== */
 
   const scrollToServices = () => {
-    setSelectedService(null);
+    navigate(`/search?city=${encodeURIComponent(city)}`);
+  };
 
-    setTimeout(() => {
-      document
-        .getElementById('services')
-        ?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        });
-    }, 50);
+  const preferredWorks = [
+    ...POPULAR_SERVICES.map((item) => item.name),
+    ...SERVICE_ALIASES,
+  ];
+
+  const workOptions = (() => {
+    const fromShops = services.flatMap((service) =>
+      (service.services || [])
+        .map((item) => item?.[0])
+        .filter(Boolean)
+    );
+    const preferredSet = new Set(preferredWorks);
+    const rest = [...new Set([...catalogNames, ...fromShops])]
+      .filter((name) => !preferredSet.has(name))
+      .sort((left, right) => left.localeCompare(right, 'ru'));
+
+    return [...new Set([...preferredWorks, ...rest])];
+  })();
+
+  const bookingWorkOptions = [
+    ...new Set([
+      ...(selectedService?.services || [])
+        .map((item) => item?.[0])
+        .filter(Boolean),
+      ...workOptions,
+    ]),
+  ];
+
+  const submitHeroSearch = (event) => {
+    event.preventDefault();
+    const resolvedWork = resolveBestService(heroWork, workOptions) || heroWork.trim();
+    const params = new URLSearchParams({
+      city,
+    });
+
+    if (resolvedWork) {
+      params.set('work', resolvedWork);
+      setHeroWork(resolvedWork);
+    }
+
+    navigate(`/search?${params.toString()}`);
   };
 
 
@@ -477,30 +885,24 @@ function HomePage({
      ОТКРЫТИЕ СЕРВИСА
   ===================================================== */
 
-  const openService = (service) => {
-    setSelectedService(service);
+  const closeService = () => {
+    setSelectedService(null);
+    setDetailsFocus('booking');
+    setModalReviews([]);
+    setShowBookingAuth(false);
+  };
 
-    setBookingService('');
+  const openService = (
+    service,
+    workName = '',
+    focus = 'booking'
+  ) => {
+    setSelectedService(service);
+    setDetailsFocus(focus);
+    setBookingService(workName);
     setBookingDate('');
     setBookingTime('');
     setShowBookingAuth(false);
-
-    if (customerCars.length > 0) {
-      setBookingCarId(
-        String(customerCars[0].id)
-      );
-    } else {
-      setBookingCarId('');
-    }
-
-    setTimeout(() => {
-      document
-        .getElementById('service-details')
-        ?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        });
-    }, 50);
   };
 
 
@@ -517,7 +919,7 @@ function HomePage({
     }
 
     setCurrentPage(page);
-    setSelectedService(null);
+    closeService();
 
     setTimeout(() => {
       document
@@ -534,15 +936,11 @@ function HomePage({
      ЗАПИСЬ
   ===================================================== */
 
-  const handleBooking = (event) => {
+  const handleBooking = async (event) => {
     event.preventDefault();
 
     if (!user) {
       setShowBookingAuth(true);
-      return;
-    }
-
-    if (!selectedBookingCar) {
       return;
     }
 
@@ -554,305 +952,169 @@ function HomePage({
       return;
     }
 
-    console.log(
-      'Запись в автосервис:',
-      {
-        service:
-          selectedService?.name,
+    const response = await authFetch('/api/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: bookingService,
+        description: '',
+        executor_id: selectedService.id,
+        visit_date: bookingDate,
+        visit_time: bookingTime,
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
 
-        car:
-          selectedBookingCar,
+    if (!response.ok) {
+      alert(readApiError(data, 'Не удалось сохранить запись'));
+      return;
+    }
 
-        bookingService,
-        bookingDate,
-        bookingTime,
-
-        customer:
-          user,
-      }
-    );
+    setOrders((current) => [mapOrder(data), ...current]);
+    setBookingService('');
+    setBookingDate('');
+    setBookingTime('');
 
     alert(
-      `Запись создана!\n\n` +
+      `Запись сохранена!\n\n` +
       `${selectedService.name}\n` +
-      `${selectedBookingCar.brand} ` +
-      `${selectedBookingCar.model}\n` +
       `${bookingService}\n` +
       `${bookingDate} в ${bookingTime}`
     );
   };
 
+  const submitShopReview = async ({ rating, text }) => {
+    if (!user) {
+      setShowBookingAuth(true);
+      return { error: 'Войдите, чтобы оставить отзыв' };
+    }
+    if (!selectedService?.id) {
+      return { error: 'Автосервис не выбран' };
+    }
+    const response = await authFetch(`/api/executors/${selectedService.id}/reviews`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rating, text }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return { error: readApiError(data, 'Не удалось отправить отзыв') };
+    }
+    setModalReviews((current) => [data, ...current]);
+    setSelectedService((current) => (
+      current
+        ? { ...current, reviews: (Number(current.reviews) || 0) + 1 }
+        : current
+    ));
+    return { ok: true };
+  };
+
+  const deleteShopReview = async (review) => {
+    if (!review?.id) return;
+    const response = await authFetch(`/api/reviews/${review.id}`, { method: 'DELETE' });
+    if (!response.ok) return;
+    setModalReviews((current) => current.filter((item) => item.id !== review.id));
+    setSelectedService((current) => (
+      current
+        ? { ...current, reviews: Math.max(0, (Number(current.reviews) || 1) - 1) }
+        : current
+    ));
+  };
+
+  const saveCar = async (event) => {
+    event.preventDefault();
+    setCabinetError('');
+
+    const response = await authFetch('/api/cars', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        brand: carDraft.brand.trim(),
+        model: carDraft.model.trim(),
+        year: carDraft.year ? Number(carDraft.year) : null,
+        mileage: carDraft.mileage
+          ? Number(carDraft.mileage)
+          : null,
+        vin: carDraft.vin.trim() || null,
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      setCabinetError(
+        readApiError(data, 'Не удалось сохранить автомобиль')
+      );
+      return;
+    }
+
+    await refreshCars();
+    setShowCarForm(false);
+    setCarDraft({
+      brand: '',
+      model: '',
+      year: '',
+      mileage: '',
+      vin: '',
+    });
+  };
+
+  const removeCar = async (carId) => {
+    const response = await authFetch(`/api/cars/${carId}`, {
+      method: 'DELETE',
+    });
+
+    if (response.ok) {
+      await refreshCars();
+    }
+  };
+
+  const saveSettings = async (event) => {
+    event.preventDefault();
+    setCabinetError('');
+
+    const payload = {};
+
+    if (settingsMode === 'name') {
+      payload.name = settingsName.trim();
+    }
+
+    if (settingsMode === 'email') {
+      payload.email = settingsEmail.trim();
+    }
+
+    if (settingsMode === 'password') {
+      payload.current_password = currentPassword;
+      payload.new_password = newPassword;
+    }
+
+    const result = await updateProfile(payload);
+
+    if (!result?.success) {
+      setCabinetError(
+        result?.error || 'Не удалось сохранить данные'
+      );
+      return;
+    }
+
+    setSettingsMode('');
+    setCurrentPassword('');
+    setNewPassword('');
+  };
+
 
   return (
-    <div className="home-page">
+    <div className={`home-page${isOverview ? ' home-overview' : ''}`}>
 
-      {/* =====================================================
-          ШАПКА
-      ===================================================== */}
-
-      <header className="site-header">
-
-        <div className="header-inner">
-
-          {/* ЛОГО */}
-
-          <Link
-            to="/"
-            className="logo"
-          >
-            <HeaderLogo />
-          </Link>
-
-
-          {/* ОСНОВНАЯ НАВИГАЦИЯ */}
-
-          <nav className="main-nav">
-
-            {isOverview ? (
-              <button
-                type="button"
-                className="nav-button"
-                onClick={scrollToServices}
-              >
-                Найти сервис
-              </button>
-            ) : (
-              <Link
-                to="/"
-                className="nav-button"
-              >
-                Найти сервис
-              </Link>
-            )}
-
-            <Link
-              to="/customer/orders/new"
-              className="nav-button"
-            >
-              Создать заказ
-            </Link>
-
-          </nav>
-
-
-          {/* =================================================
-              ПРАВАЯ ЧАСТЬ ШАПКИ
-          ================================================= */}
-
-          <div className="auth-nav">
-
-            {user ? (
-              <>
-                {/* ЗАКАЗЫ */}
-
-                {user.role === 'customer' && (
-                  <>
-                    <Link
-                      to="/orders"
-                      className="header-action-link"
-                    >
-                      Заказы
-                    </Link>
-
-                    {/* ЗАЯВКИ */}
-
-                    <Link
-                      to="/requests"
-                      className="header-action-link"
-                    >
-                      Заявки
-                    </Link>
-                  </>
-                )}
-
-
-                {/* ПРОФИЛЬ */}
-
-                {user.role === 'customer' ? (
-                  <div
-                    className="header-profile-wrapper"
-                    style={{
-                      position: 'relative',
-                    }}
-                  >
-                    <button
-                      type="button"
-                      className="header-user"
-                      title="Личный кабинет"
-                      onClick={() =>
-                        setProfileOpen((value) => !value)
-                      }
-                      aria-expanded={profileOpen}
-                      aria-haspopup="menu"
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '9px',
-                        border: '0',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        padding: '4px 0',
-                      }}
-                    >
-                      <span
-                        className="header-user-avatar"
-                        style={{
-                          width: '34px',
-                          height: '34px',
-                          borderRadius: '50%',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: '#fff0eb',
-                          color: '#f56a4d',
-                          border: '1px solid #ffd2c5',
-                          fontSize: '14px',
-                          fontWeight: 800,
-                          flexShrink: 0,
-                        }}
-                      >
-                        {initials}
-                      </span>
-
-                      <span className="header-user-name">
-                        {firstName}
-                      </span>
-
-                      <span
-                        style={{
-                          fontSize: '14px',
-                          color: '#777',
-                          lineHeight: 1,
-                        }}
-                      >
-                        {profileOpen ? '⌃' : '⌄'}
-                      </span>
-                    </button>
-
-                    {profileOpen && (
-                      <div
-                        role="menu"
-                        style={{
-                          position: 'absolute',
-                          top: 'calc(100% + 10px)',
-                          right: 0,
-                          width: '230px',
-                          background: '#fff',
-                          border: '1px solid #eee2dc',
-                          borderRadius: '14px',
-                          boxShadow: '0 14px 35px rgba(40, 25, 20, 0.12)',
-                          padding: '10px',
-                          zIndex: 100,
-                        }}
-                      >
-                        <div
-                          style={{
-                            padding: '10px 11px',
-                            borderBottom: '1px solid #f1e7e2',
-                            marginBottom: '6px',
-                          }}
-                        >
-                          <strong
-                            style={{
-                              display: 'block',
-                              color: '#171515',
-                            }}
-                          >
-                            {user.name || firstName}
-                          </strong>
-
-                          {user.email && (
-                            <span
-                              style={{
-                                display: 'block',
-                                marginTop: '3px',
-                                color: '#8a817d',
-                                fontSize: '13px',
-                              }}
-                            >
-                              {user.email}
-                            </span>
-                          )}
-                        </div>
-
-                        <Link
-                          to="/settings"
-                          className="header-profile-menu-link"
-                          onClick={() => setProfileOpen(false)}
-                          style={{
-                            display: 'block',
-                            padding: '10px 11px',
-                            borderRadius: '9px',
-                            color: '#171515',
-                            textDecoration: 'none',
-                          }}
-                        >
-                          Настройки
-                        </Link>
-
-                        <button
-                          type="button"
-                          onClick={handleLogout}
-                          style={{
-                            display: 'block',
-                            width: '100%',
-                            textAlign: 'left',
-                            padding: '10px 11px',
-                            border: '0',
-                            borderRadius: '9px',
-                            background: 'transparent',
-                            color: '#d9573c',
-                            cursor: 'pointer',
-                            font: 'inherit',
-                          }}
-                        >
-                          Выйти
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <Link
-                    to={
-                      user.role === 'admin'
-                        ? '/admin'
-                        : '/executor'
-                    }
-                    className="header-user"
-                    title="Личный кабинет"
-                  >
-                    <span className="header-user-name">
-                      {firstName}
-                    </span>
-                  </Link>
-                )}
-
-              </>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  className="auth-link"
-                  onClick={onLogin}
-                >
-                  Войти
-                </button>
-
-                <button
-                  type="button"
-                  className="register-link"
-                  onClick={onRegister}
-                >
-                  Регистрация
-                </button>
-              </>
-            )}
-
-          </div>
-
-        </div>
-
-      </header>
+      <SiteHeader
+        activeNav="home"
+        scrolled={headerScrolled}
+        onLogin={onLogin}
+        onRegister={onRegister}
+      />
 
 
       {/* =====================================================
@@ -865,144 +1127,90 @@ function HomePage({
             БАННЕР
         =================================================== */}
 
-        <section className="hero-section">
-
+        {isOverview && (
+        <section className="home-hero">
           <img
-            className="hero-image"
+            className="home-hero-banner"
             src={bannerImage}
-            alt="Современный автосервис"
+            alt="Автосервис"
           />
 
-          <div className="hero-overlay" />
-
-          <div className="hero-inner">
-
-            <div className="hero-content">
-
-              <p className="hero-label">
-                Автосервис рядом с вами
-              </p>
-
+          <div className="home-hero-content">
+            <div className="home-hero-copy">
               <h1>
-                Найдите сервис,
+                Найдите автосервис,
                 <br />
-                которому можно
-                <br />
-                доверять
+                которому можно <span>доверять</span>
               </h1>
-
-              <p className="hero-description">
-                Сравнивайте автосервисы по
-                рейтингу, стоимости и
-                расположению.
-                <br />
-                Создавайте заказ и выбирайте
-                подходящего исполнителя.
+              <p>
+                Сравнивайте цены, читайте реальные отзывы
+                и записывайтесь онлайн. Обслуживайте автомобиль
+                без лишних хлопот.
               </p>
-
-
-              {/* КНОПКИ */}
-
-              <div className="hero-actions">
-
-                <button
-                  type="button"
-                  className="primary-button"
-                  onClick={scrollToServices}
-                >
-
-                  <span className="button-icon">
-                    <SearchIcon />
-                  </span>
-
-                  <span>
-                    Найти автосервис
-                  </span>
-
-                  <span className="button-arrow">
-                    →
-                  </span>
-
-                </button>
-
-
-                <Link
-                  to="/customer/orders/new"
-                  className="secondary-button"
-                >
-
-                  <span className="button-icon">
-                    <ClipboardIcon />
-                  </span>
-
-                  <span>
-                    Создать заказ
-                  </span>
-
-                  <span className="button-arrow">
-                    →
-                  </span>
-
-                </Link>
-
-              </div>
-
-
-              {/* ПРЕИМУЩЕСТВА */}
-
-              <div className="hero-benefits">
-
-                <div className="benefit">
-
-                  <span className="benefit-icon">
-                    <ShieldIcon />
-                  </span>
-
-                  <span>
-                    Проверенные
-                    <br />
-                    автосервисы
-                  </span>
-
-                </div>
-
-
-                <div className="benefit">
-
-                  <span className="benefit-icon">
-                    <ClockIcon />
-                  </span>
-
-                  <span>
-                    Удобная
-                    <br />
-                    запись онлайн
-                  </span>
-
-                </div>
-
-
-                <div className="benefit">
-
-                  <span className="benefit-icon">
-                    <LocationIcon />
-                  </span>
-
-                  <span>
-                    Сервисы
-                    <br />
-                    рядом с вами
-                  </span>
-
-                </div>
-
-              </div>
-
             </div>
 
-          </div>
+            <form className="home-search" onSubmit={submitHeroSearch}>
+              <div className="home-search-field">
+                <span className="home-search-icon" aria-hidden="true">
+                  <WrenchIcon />
+                </span>
+                <span className="home-search-texts">
+                  <ServiceSuggest
+                    value={heroWork}
+                    options={workOptions}
+                    onChange={setHeroWork}
+                    placeholder="Например, замена тормозных колодок"
+                  />
+                </span>
+              </div>
+              <button type="submit">
+                <SearchIcon />
+                Найти автосервисы
+                <ArrowRightIcon />
+              </button>
+            </form>
 
+            <div className="home-perks">
+              <div>
+                <span className="perk-icon" aria-hidden="true">
+                  <ShieldCheckIcon />
+                </span>
+                <div>
+                  <strong>Проверенные автосервисы</strong>
+                  <span>Реальные отзывы и рейтинг</span>
+                </div>
+              </div>
+              <div>
+                <span className="perk-icon" aria-hidden="true">
+                  <PercentIcon />
+                </span>
+                <div>
+                  <strong>Прозрачные цены</strong>
+                  <span>Сравнивайте стоимость услуг</span>
+                </div>
+              </div>
+              <div>
+                <span className="perk-icon" aria-hidden="true">
+                  <CalendarIcon />
+                </span>
+                <div>
+                  <strong>Удобная запись</strong>
+                  <span>Выберите дату и время онлайн</span>
+                </div>
+              </div>
+              <div>
+                <span className="perk-icon" aria-hidden="true">
+                  <LocationIcon />
+                </span>
+                <div>
+                  <strong>Сервисы рядом</strong>
+                  <span>На карте и со схемой проезда</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
+        )}
 
 
         {/* ===================================================
@@ -1132,6 +1340,9 @@ function HomePage({
                     <button
                       type="button"
                       className="primary-button"
+                      onClick={() =>
+                        navigate(`/executors/${request.executorId}`)
+                      }
                     >
                       Посмотреть предложение →
                     </button>
@@ -1171,10 +1382,87 @@ function HomePage({
               <button
                 type="button"
                 className="primary-button"
+                onClick={() => {
+                  setCabinetError('');
+                  setShowCarForm((open) => !open);
+                }}
               >
                 + Добавить автомобиль
               </button>
             </div>
+
+            {showCarForm && (
+              <form
+                className="customer-settings-card"
+                onSubmit={saveCar}
+              >
+                <div className="customer-settings-row">
+                  <input
+                    value={carDraft.brand}
+                    onChange={(event) =>
+                      setCarDraft((draft) => ({
+                        ...draft,
+                        brand: event.target.value,
+                      }))
+                    }
+                    placeholder="Марка"
+                    required
+                  />
+                  <input
+                    value={carDraft.model}
+                    onChange={(event) =>
+                      setCarDraft((draft) => ({
+                        ...draft,
+                        model: event.target.value,
+                      }))
+                    }
+                    placeholder="Модель"
+                    required
+                  />
+                </div>
+                <div className="customer-settings-row">
+                  <input
+                    value={carDraft.year}
+                    onChange={(event) =>
+                      setCarDraft((draft) => ({
+                        ...draft,
+                        year: event.target.value,
+                      }))
+                    }
+                    placeholder="Год"
+                    inputMode="numeric"
+                  />
+                  <input
+                    value={carDraft.mileage}
+                    onChange={(event) =>
+                      setCarDraft((draft) => ({
+                        ...draft,
+                        mileage: event.target.value,
+                      }))
+                    }
+                    placeholder="Пробег, км"
+                    inputMode="numeric"
+                  />
+                  <input
+                    value={carDraft.vin}
+                    onChange={(event) =>
+                      setCarDraft((draft) => ({
+                        ...draft,
+                        vin: event.target.value,
+                      }))
+                    }
+                    placeholder="VIN"
+                  />
+                </div>
+                {cabinetError && <p>{cabinetError}</p>}
+                <button
+                  type="submit"
+                  className="primary-button"
+                >
+                  Сохранить автомобиль
+                </button>
+              </form>
+            )}
 
             {customerCars.length > 0 ? (
               <div className="customer-garage-list">
@@ -1219,6 +1507,14 @@ function HomePage({
                         <strong>{car.year || '—'}</strong>
                       </div>
                     </div>
+
+                    <button
+                      type="button"
+                      className="customer-outline-button"
+                      onClick={() => removeCar(car.id)}
+                    >
+                      Удалить
+                    </button>
                   </article>
                 ))}
               </div>
@@ -1239,6 +1535,10 @@ function HomePage({
                 <button
                   type="button"
                   className="primary-button"
+                  onClick={() => {
+                    setCabinetError('');
+                    setShowCarForm(true);
+                  }}
                 >
                   Добавить автомобиль
                 </button>
@@ -1261,61 +1561,134 @@ function HomePage({
             </div>
 
             <div className="customer-settings-card">
-              <div className="customer-settings-row">
-                <div>
-                  <span className="customer-settings-label">
-                    Имя
-                  </span>
-                  <strong>
-                    {user?.name || 'Не указано'}
-                  </strong>
+              <form onSubmit={saveSettings}>
+                <div className="customer-settings-row">
+                  <div>
+                    <span className="customer-settings-label">
+                      Имя
+                    </span>
+                    {settingsMode === 'name' ? (
+                      <input
+                        value={settingsName}
+                        onChange={(event) =>
+                          setSettingsName(event.target.value)
+                        }
+                        required
+                      />
+                    ) : (
+                      <strong>
+                        {user?.name || 'Не указано'}
+                      </strong>
+                    )}
+                  </div>
+
+                  <button
+                    type={settingsMode === 'name' ? 'submit' : 'button'}
+                    className="customer-outline-button"
+                    onClick={() => {
+                      if (settingsMode !== 'name') {
+                        setCabinetError('');
+                        setSettingsName(user?.name || '');
+                        setSettingsMode('name');
+                      }
+                    }}
+                  >
+                    {settingsMode === 'name' ? 'Сохранить' : 'Изменить'}
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  className="customer-outline-button"
-                >
-                  Изменить
-                </button>
-              </div>
+                <div className="customer-settings-divider" />
 
-              <div className="customer-settings-divider" />
+                <div className="customer-settings-row">
+                  <div>
+                    <span className="customer-settings-label">
+                      Email
+                    </span>
+                    {settingsMode === 'email' ? (
+                      <input
+                        type="email"
+                        value={settingsEmail}
+                        onChange={(event) =>
+                          setSettingsEmail(event.target.value)
+                        }
+                        required
+                      />
+                    ) : (
+                      <strong>
+                        {user?.email || 'Не указан'}
+                      </strong>
+                    )}
+                  </div>
 
-              <div className="customer-settings-row">
-                <div>
-                  <span className="customer-settings-label">
-                    Email
-                  </span>
-                  <strong>
-                    {user?.email || 'Не указан'}
-                  </strong>
+                  <button
+                    type={settingsMode === 'email' ? 'submit' : 'button'}
+                    className="customer-outline-button"
+                    onClick={() => {
+                      if (settingsMode !== 'email') {
+                        setCabinetError('');
+                        setSettingsEmail(user?.email || '');
+                        setSettingsMode('email');
+                      }
+                    }}
+                  >
+                    {settingsMode === 'email' ? 'Сохранить' : 'Изменить'}
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  className="customer-outline-button"
-                >
-                  Изменить
-                </button>
-              </div>
+                <div className="customer-settings-divider" />
 
-              <div className="customer-settings-divider" />
+                <div className="customer-settings-row">
+                  <div>
+                    <span className="customer-settings-label">
+                      Пароль
+                    </span>
+                    {settingsMode === 'password' ? (
+                      <div>
+                        <input
+                          type="password"
+                          value={currentPassword}
+                          onChange={(event) =>
+                            setCurrentPassword(event.target.value)
+                          }
+                          placeholder="Текущий пароль"
+                          required
+                        />
+                        <input
+                          type="password"
+                          value={newPassword}
+                          onChange={(event) =>
+                            setNewPassword(event.target.value)
+                          }
+                          placeholder="Новый пароль"
+                          minLength={8}
+                          required
+                        />
+                      </div>
+                    ) : (
+                      <strong>••••••••••</strong>
+                    )}
+                  </div>
 
-              <div className="customer-settings-row">
-                <div>
-                  <span className="customer-settings-label">
-                    Пароль
-                  </span>
-                  <strong>••••••••••</strong>
+                  <button
+                    type={settingsMode === 'password' ? 'submit' : 'button'}
+                    className="customer-outline-button"
+                    onClick={() => {
+                      if (settingsMode !== 'password') {
+                        setCabinetError('');
+                        setCurrentPassword('');
+                        setNewPassword('');
+                        setSettingsMode('password');
+                      }
+                    }}
+                  >
+                    {settingsMode === 'password'
+                      ? 'Сохранить'
+                      : 'Изменить пароль'}
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  className="customer-outline-button"
-                >
-                  Изменить пароль
-                </button>
-              </div>
+                {cabinetError && <p>{cabinetError}</p>}
+              </form>
             </div>
 
             <div className="customer-settings-card customer-settings-danger">
@@ -1347,115 +1720,149 @@ function HomePage({
             КАК ЭТО РАБОТАЕТ
         =================================================== */}
 
-        <section className="how-section">
-
-          <p className="section-label">
-            Просто и удобно
-          </p>
-
-          <h2>
-            Как это работает
-          </h2>
-
-          <div className="section-line" />
-
-
-          <div className="steps-grid">
-
-            {/* 01 */}
-
-            <article className="step-card">
-
-              <div className="step-card-top">
-
-                <span className="step-number">
-                  01
-                </span>
-
-                <span className="step-icon">
-                  <CarIcon />
-                </span>
-
-              </div>
-
-              <h3>
-                Найдите сервис
-              </h3>
-
-              <p>
-                Сравните автосервисы по рейтингу,
-                стоимости и расположению.
-              </p>
-
-            </article>
-
-
-            {/* 02 */}
-
-            <article className="step-card">
-
-              <div className="step-card-top">
-
-                <span className="step-number">
-                  02
-                </span>
-
-                <span className="step-icon">
-                  <SearchIcon />
-                </span>
-
-              </div>
-
-              <h3>
-                Выберите услугу
-              </h3>
-
-              <p>
-                Посмотрите услуги и цены
-                выбранного автосервиса.
-              </p>
-
-            </article>
-
-
-            {/* 03 */}
-
-            <article className="step-card">
-
-              <div className="step-card-top">
-
-                <span className="step-number">
-                  03
-                </span>
-
-                <span className="step-icon">
-                  <CalendarIcon />
-                </span>
-
-              </div>
-
-              <h3>
-                Запишитесь онлайн
-              </h3>
-
-              <p>
-                Выберите дату и удобное время
-                для обслуживания автомобиля.
-              </p>
-
-            </article>
-
+        <section className="popular-section" id="services">
+          <div className="popular-heading">
+            <div>
+              <h2>Популярные услуги</h2>
+            </div>
+            <Link to={`/search?city=${encodeURIComponent(city)}`}>Все услуги →</Link>
           </div>
 
+          <div className="work-card-grid">
+            {POPULAR_SERVICES.map((item) => {
+              const livePrice = services
+                .flatMap((service) => service.services || [])
+                .find((row) => row?.[0] === item.name)?.[1];
+              const Icon = item.Icon;
+
+              return (
+                <Link
+                  className="work-card"
+                  key={item.name}
+                  to={`/search?work=${encodeURIComponent(item.name)}&city=${encodeURIComponent(city)}`}
+                >
+                  <img
+                    className="work-card-image"
+                    src={item.image}
+                    alt={item.name}
+                  />
+                  <span className="work-card-body">
+                    <span className="work-card-icon" aria-hidden="true">
+                      <Icon />
+                    </span>
+                    <span className="work-card-text">
+                      <strong>{item.name}</strong>
+                      <small>{livePrice || item.price}</small>
+                    </span>
+                    <span className="work-card-arrow" aria-hidden="true">
+                      <ServiceArrowIcon />
+                    </span>
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
         </section>
 
+        <section className="popular-section">
+          <div className="popular-heading">
+            <div>
+              <h2>Автосервисы рядом</h2>
+              <p>Найдено {services.length}</p>
+            </div>
+            <Link to={`/search?city=${encodeURIComponent(city)}`}>Все автосервисы →</Link>
+          </div>
+
+          <div className="shop-grid">
+            {services.slice(0, 4).map((service, index) => (
+              <article className="shop-card" key={service.id}>
+                <div className="shop-card-media">
+                  <img
+                    className="shop-card-image"
+                    src={SHOP_IMAGES[index % SHOP_IMAGES.length]}
+                    alt={service.name}
+                  />
+                  <FavoriteButton
+                    className="shop-card-favorite"
+                    active={isFavorite(service.id)}
+                    onToggle={() => toggleFavorite(service.id)}
+                  />
+                </div>
+                <div className="shop-card-content">
+                  <div className="shop-card-top">
+                    <h3>
+                      <button
+                        type="button"
+                        className="result-name-link shop-name-button"
+                        onClick={() => openService(service)}
+                      >
+                        {service.name}
+                      </button>
+                    </h3>
+                    <button
+                      type="button"
+                      className={`result-rating-link shop-rating-button ${
+                        service.status === 'Закрыто' ? 'closed-status' : ''
+                      }`}
+                      onClick={() => openService(service, '', 'reviews')}
+                    >
+                      ★ {service.rating}
+                      {service.reviews ? ` (${service.reviews})` : ' · отзывы'}
+                    </button>
+                  </div>
+                  <p>{service.address}</p>
+                  <p className={
+                    service.status === 'Закрыто'
+                      ? 'result-status closed'
+                      : 'result-status'
+                  }>
+                    {service.status}
+                    {service.hours ? ` · ${service.hours}` : ''}
+                  </p>
+                  <div className="popular-tags">
+                    {(service.services || []).slice(0, 3).map((item) => (
+                      <span key={item[0]}>{item[0]}</span>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="shop-book"
+                    onClick={() => openService(service)}
+                  >
+                    Записаться
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="owner-banner">
+          <div>
+            <h2>Вы автосервис?</h2>
+            <p>
+              Получайте больше клиентов с площадки «Автосервис рядом».
+            </p>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={onRegister}
+            >
+              Разместить автосервис →
+            </button>
+          </div>
+          <ul>
+            <li>Новые клиенты каждый день</li>
+            <li>Удобное управление записями</li>
+            <li>Продвижение в вашем регионе</li>
+          </ul>
+        </section>
 
         {/* ===================================================
             АВТОСЕРВИСЫ
         =================================================== */}
 
         <section
-          id="services"
           className="services-section"
         >
 
@@ -1482,11 +1889,51 @@ function HomePage({
             <div className="services-count">
               Найдено
               <strong>
-                {services.length}
+                {filteredServices.length}
               </strong>
             </div>
 
           </div>
+
+
+          {!servicesLoading && !servicesError && (
+            <form
+              className="work-search"
+              onSubmit={(event) => {
+                event.preventDefault();
+              }}
+            >
+              <span className="work-search-icon">
+                <SearchIcon />
+              </span>
+
+              <input
+                id="work-search"
+                type="search"
+                value={workQuery}
+                onChange={(event) => {
+                  setWorkQuery(event.target.value);
+                  setCurrentPage(1);
+                  setSelectedService(null);
+                }}
+                placeholder="Наименование работы, например замена масла"
+                aria-label="Поиск услуги по наименованию работы"
+              />
+
+              {workQuery && (
+                <button
+                  type="button"
+                  className="work-search-clear"
+                  onClick={() => {
+                    setWorkQuery('');
+                    setCurrentPage(1);
+                  }}
+                >
+                  Очистить
+                </button>
+              )}
+            </form>
+          )}
 
 
           {servicesLoading && (
@@ -1509,10 +1956,19 @@ function HomePage({
               </p>
             )}
 
+          {!servicesLoading &&
+            !servicesError &&
+            services.length > 0 &&
+            filteredServices.length === 0 && (
+              <p className="services-subtitle">
+                Услуги по запросу «{workQuery.trim()}» не найдены.
+              </p>
+            )}
+
 
           {/* ТАБЛИЦА */}
 
-          {!servicesLoading && !servicesError && services.length > 0 && (
+          {!servicesLoading && !servicesError && filteredServices.length > 0 && (
           <div className="services-table">
 
             <div className="services-table-head">
@@ -1539,7 +1995,13 @@ function HomePage({
 
 
             {visibleServices.map(
-              (service) => (
+              (service) => {
+                const matchedWorks = getMatchedWorks(
+                  service,
+                  normalizedWorkQuery
+                );
+
+                return (
                 <article
                   key={service.id}
                   className="service-row"
@@ -1559,9 +2021,26 @@ function HomePage({
                         {service.name}
                       </h3>
 
-                      <span>
+                      <span
+                        className={
+                          service.status === 'Закрыто'
+                            ? 'closed-status'
+                            : undefined
+                        }
+                      >
                         {service.status}
                       </span>
+
+                      {matchedWorks.length > 0 && (
+                        <p className="service-work-match">
+                          {matchedWorks
+                            .map(
+                              ([name, price]) =>
+                                `${name} · ${price}`
+                            )
+                            .join(', ')}
+                        </p>
+                      )}
 
                     </div>
 
@@ -1583,7 +2062,11 @@ function HomePage({
 
                   {/* РЕЙТИНГ */}
 
-                  <div className="service-rating">
+                  <button
+                    type="button"
+                    className="service-rating service-rating-link"
+                    onClick={() => openService(service, '', 'reviews')}
+                  >
 
                     <span className="star-icon">
                       <StarIcon />
@@ -1594,10 +2077,10 @@ function HomePage({
                     </strong>
 
                     <span>
-                      ({service.reviews})
+                      ({service.reviews || 0} отзывов)
                     </span>
 
-                  </div>
+                  </button>
 
 
                   {/* ЧАСЫ */}
@@ -1620,7 +2103,12 @@ function HomePage({
                     <button
                       type="button"
                       onClick={() =>
-                        openService(service)
+                        openService(
+                          service,
+                          matchedWorks.length === 1
+                            ? matchedWorks[0][0]
+                            : ''
+                        )
                       }
                     >
                       Подробнее
@@ -1632,7 +2120,8 @@ function HomePage({
                   </div>
 
                 </article>
-              )
+                );
+              }
             )}
 
           </div>
@@ -1651,11 +2140,11 @@ function HomePage({
                 type="button"
                 className="pagination-arrow"
                 disabled={
-                  currentPage === 1
+                  safePage === 1
                 }
                 onClick={() =>
                   handlePageChange(
-                    currentPage - 1
+                    safePage - 1
                   )
                 }
               >
@@ -1675,7 +2164,7 @@ function HomePage({
                   type="button"
                   key={page}
                   className={
-                    currentPage === page
+                    safePage === page
                       ? 'pagination-number active'
                       : 'pagination-number'
                   }
@@ -1693,12 +2182,12 @@ function HomePage({
                 type="button"
                 className="pagination-arrow"
                 disabled={
-                  currentPage ===
+                  safePage ===
                   totalPages
                 }
                 onClick={() =>
                   handlePageChange(
-                    currentPage + 1
+                    safePage + 1
                   )
                 }
               >
@@ -1712,473 +2201,29 @@ function HomePage({
         </section>
 
 
-        {/* ===================================================
-            КАРТОЧКА АВТОСЕРВИСА
-        =================================================== */}
-
         {selectedService && (
-
-          <section
-            id="service-details"
-            className="service-details-section"
-          >
-
-            <div className="service-details-card">
-
-              <div className="service-details-main">
-
-                <div className="service-details-top">
-
-                  <div className="service-avatar large">
-                    <CarIcon />
-                  </div>
-
-                  <div>
-
-                    <p className="service-details-label">
-                      Автосервис
-                    </p>
-
-                    <h2>
-                      {selectedService.name}
-                    </h2>
-
-                    <div className="service-details-rating">
-
-                      <span className="star-icon">
-                        <StarIcon />
-                      </span>
-
-                      <strong>
-                        {selectedService.rating}
-                      </strong>
-
-                      <span>
-                        {selectedService.reviews}
-                        {' '}
-                        отзывов
-                      </span>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-
-                {/* ИНФОРМАЦИЯ */}
-
-                <div className="service-info-grid">
-
-                  <div>
-
-                    <span className="info-icon">
-                      <LocationIcon />
-                    </span>
-
-                    <div>
-                      <small>
-                        Адрес
-                      </small>
-
-                      <strong>
-                        {selectedService.address}
-                      </strong>
-                    </div>
-
-                  </div>
-
-
-                  <div>
-
-                    <span className="info-icon">
-                      <ClockIcon />
-                    </span>
-
-                    <div>
-                      <small>
-                        Часы работы
-                      </small>
-
-                      <strong>
-                        {selectedService.hours}
-                      </strong>
-                    </div>
-
-                  </div>
-
-
-                  <div>
-
-                    <span className="info-icon">
-                      <ShieldIcon />
-                    </span>
-
-                    <div>
-                      <small>
-                        Статус
-                      </small>
-
-                      <strong className="open-status">
-                        {selectedService.status}
-                      </strong>
-                    </div>
-
-                  </div>
-
-                </div>
-
-
-                <p className="service-details-description">
-                  {selectedService.description}
-                </p>
-
-
-                {/* УСЛУГИ */}
-
-                <div className="price-section">
-
-                  <div className="price-section-header">
-
-                    <div>
-
-                      <p className="section-label">
-                        Услуги и цены
-                      </p>
-
-                      <h3>
-                        Выберите необходимую работу
-                      </h3>
-
-                    </div>
-
-                  </div>
-
-
-                  <div className="price-list">
-
-                    {selectedService.services.map(
-                      ([name, price]) => (
-
-                        <button
-                          type="button"
-                          key={name}
-                          className={
-                            bookingService === name
-                              ? 'price-item selected'
-                              : 'price-item'
-                          }
-                          onClick={() =>
-                            setBookingService(name)
-                          }
-                        >
-
-                          <span>
-                            {name}
-                          </span>
-
-                          <strong>
-                            {price}
-                          </strong>
-
-                        </button>
-
-                      )
-                    )}
-
-                  </div>
-
-                </div>
-
-              </div>
-
-
-              {/* =================================================
-                  ЗАПИСЬ
-              ================================================= */}
-
-              <aside className="booking-card">
-
-                <p className="booking-label">
-                  Запись онлайн
-                </p>
-
-                <h3>
-                  Запишитесь на обслуживание
-                </h3>
-
-                <p className="booking-description">
-                  Выберите услугу, дату и
-                  удобное время.
-                </p>
-
-
-                <form
-                  className="booking-form"
-                  onSubmit={handleBooking}
-                >
-
-                  {/* АВТОМОБИЛЬ */}
-
-                  <div className="booking-field booking-car-field">
-
-                    <label htmlFor="booking-car">
-                      Автомобиль
-                    </label>
-
-
-                    {user ? (
-
-                      customerCars.length > 0 ? (
-
-                        <select
-                          id="booking-car"
-                          value={bookingCarId}
-                          onChange={(event) =>
-                            setBookingCarId(
-                              event.target.value
-                            )
-                          }
-                          required
-                        >
-
-                          {customerCars.map(
-                            (car) => (
-
-                              <option
-                                key={car.id}
-                                value={car.id}
-                              >
-                                {car.brand}{' '}
-                                {car.model},{' '}
-                                {car.year}
-                              </option>
-
-                            )
-                          )}
-
-                        </select>
-
-                      ) : (
-
-                        <div className="booking-no-car">
-
-                          <p>
-                            В личном кабинете
-                            пока нет автомобиля.
-                          </p>
-
-                          <Link to="/garage">
-                            Добавить автомобиль
-                          </Link>
-
-                        </div>
-
-                      )
-
-                    ) : (
-
-                      <div className="booking-login-hint">
-
-                        <span>
-                          Войдите в аккаунт,
-                          чтобы выбрать автомобиль
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowBookingAuth(
-                              true
-                            )
-                          }
-                        >
-                          Войти
-                        </button>
-
-                      </div>
-
-                    )}
-
-                  </div>
-
-
-                  {/* УСЛУГА */}
-
-                  <div className="booking-field">
-
-                    <label htmlFor="booking-service">
-                      Услуга
-                    </label>
-
-                    <select
-                      id="booking-service"
-                      value={bookingService}
-                      onChange={(event) =>
-                        setBookingService(
-                          event.target.value
-                        )
-                      }
-                      required
-                    >
-
-                      <option value="">
-                        Выберите услугу
-                      </option>
-
-                      {selectedService.services.map(
-                        ([name]) => (
-
-                          <option
-                            key={name}
-                            value={name}
-                          >
-                            {name}
-                          </option>
-
-                        )
-                      )}
-
-                    </select>
-
-                  </div>
-
-
-                  {/* ДАТА */}
-
-                  <div className="booking-field">
-
-                    <label htmlFor="booking-date">
-                      Дата
-                    </label>
-
-                    <input
-                      id="booking-date"
-                      type="date"
-                      value={bookingDate}
-                      onChange={(event) =>
-                        setBookingDate(
-                          event.target.value
-                        )
-                      }
-                      required
-                    />
-
-                  </div>
-
-
-                  {/* ВРЕМЯ */}
-
-                  <div className="booking-field">
-
-                    <label htmlFor="booking-time">
-                      Время
-                    </label>
-
-                    <select
-                      id="booking-time"
-                      value={bookingTime}
-                      onChange={(event) =>
-                        setBookingTime(
-                          event.target.value
-                        )
-                      }
-                      required
-                    >
-
-                      <option value="">
-                        Выберите время
-                      </option>
-
-                      <option value="09:00">
-                        09:00
-                      </option>
-
-                      <option value="10:00">
-                        10:00
-                      </option>
-
-                      <option value="11:00">
-                        11:00
-                      </option>
-
-                      <option value="12:00">
-                        12:00
-                      </option>
-
-                      <option value="13:00">
-                        13:00
-                      </option>
-
-                      <option value="14:00">
-                        14:00
-                      </option>
-
-                      <option value="15:00">
-                        15:00
-                      </option>
-
-                      <option value="16:00">
-                        16:00
-                      </option>
-
-                      <option value="17:00">
-                        17:00
-                      </option>
-
-                      <option value="18:00">
-                        18:00
-                      </option>
-
-                      <option value="19:00">
-                        19:00
-                      </option>
-
-                    </select>
-
-                  </div>
-
-
-                  <button
-                    type="submit"
-                    className="booking-submit"
-                    disabled={
-                      Boolean(user) &&
-                      !selectedBookingCar
-                    }
-                  >
-                    Записаться
-                    <span>
-                      →
-                    </span>
-                  </button>
-
-                </form>
-
-              </aside>
-
-            </div>
-
-
-            {/* НАЗАД */}
-
-            <button
-              type="button"
-              className="close-details"
-              onClick={() =>
-                setSelectedService(null)
-              }
-            >
-              ← Вернуться к списку сервисов
-            </button>
-
-          </section>
-
+          <ServiceCardModal
+            executor={selectedService}
+            coverImage={SHOP_IMAGES[Math.abs(Number(selectedService.id) || 0) % SHOP_IMAGES.length]}
+            reviews={modalReviews}
+            reviewsLoading={modalReviewsLoading}
+            focus={detailsFocus}
+            serviceOptions={bookingWorkOptions}
+            bookingService={bookingService}
+            bookingDate={bookingDate}
+            bookingTime={bookingTime}
+            user={user}
+            onClose={closeService}
+            onSelectService={setBookingService}
+            onChangeService={setBookingService}
+            onChangeDate={setBookingDate}
+            onChangeTime={setBookingTime}
+            onSubmit={handleBooking}
+            onFocusReviews={() => setDetailsFocus('reviews')}
+            onSubmitReview={submitShopReview}
+            onDeleteReview={deleteShopReview}
+          />
         )}
-
-
-
-
 
           </>
         )}

@@ -3,7 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 function ProtectedRoute({ allowedRoles }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, loggingOut } = useAuth();
 
   // Ждём, пока AuthContext восстановит сессию.
   if (isLoading) {
@@ -15,8 +15,14 @@ function ProtectedRoute({ allowedRoles }) {
   }
 
   // Перенаправляем только после завершения проверки.
+  // При выходе из кабинета цель — стартовая страница.
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return (
+      <Navigate
+        to={loggingOut ? '/' : '/login'}
+        replace
+      />
+    );
   }
 
   // Если роль не подходит, отправляем в кабинет пользователя.
