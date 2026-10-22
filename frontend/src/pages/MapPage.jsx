@@ -146,6 +146,7 @@ function MapPage({ onLogin, onRegister }) {
     markersRef.current = L.layerGroup().addTo(map);
     const resize = () => map.invalidateSize();
     window.setTimeout(resize, 80);
+    window.setTimeout(resize, 300);
     window.addEventListener('resize', resize);
     return () => {
       window.removeEventListener('resize', resize);
