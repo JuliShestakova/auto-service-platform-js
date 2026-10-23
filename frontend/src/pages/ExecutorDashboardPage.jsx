@@ -2,10 +2,19 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
-import ServiceSuggest from '../components/ServiceSuggest';
+import HoursRangeInputs from '../components/HoursRangeInputs';
+import FilterSelect from '../components/FilterSelect';
+import PositionPicker from '../components/PositionPicker';
+import { joinPositions } from '../data/staffPositions';
 import { SERVICE_GROUPS } from '../data/serviceCatalog';
 import { resolveBestService } from '../utils/fuzzyService';
 import { CITIES, DEFAULT_CITY } from '../data/cities';
+import {
+  isCompleteHoursRange,
+  isValidHoursRange,
+  joinHoursRange,
+  parseHoursRange,
+} from '../utils/hours';
 import shopImage1 from '../assets/shops/shop-1.jpg';
 import shopImage2 from '../assets/shops/shop-2.jpg';
 import shopImage3 from '../assets/shops/shop-3.jpg';
@@ -101,7 +110,12 @@ function weekDays(iso) {
   const start = startOfWeek(iso);
   return WEEKDAYS.map((label, index) => {
     const value = addDays(start, index);
-    return { label, iso: value, date: parseIso(value).getDate() };
+    return {
+      label,
+      iso: value,
+      date: parseIso(value).getDate(),
+      weekend: index >= 5,
+    };
   });
 }
 
@@ -346,7 +360,7 @@ export default function ExecutorDashboardPage() {
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [confirmStaffId, setConfirmStaffId] = useState('');
   const [confirmError, setConfirmError] = useState('');
-  const [staffDraft, setStaffDraft] = useState({ name: '', position: 'Мастер', phone: '' });
+  const [staffDraft, setStaffDraft] = useState({ name: '', positions: [], phone: '' });
   const [newBookingOpen, setNewBookingOpen] = useState(false);
   const [newBookingSaving, setNewBookingSaving] = useState(false);
   const [newBookingError, setNewBookingError] = useState('');
@@ -371,7 +385,8 @@ export default function ExecutorDashboardPage() {
     phone: '',
     address: '',
     city: DEFAULT_CITY,
-    hours: '',
+    hoursFrom: '',
+    hoursTo: '',
     description: '',
     status: 'Открыто',
   });
@@ -381,6 +396,16 @@ export default function ExecutorDashboardPage() {
   const [servicesSaving, setServicesSaving] = useState(false);
   const [servicesError, setServicesError] = useState('');
   const [servicesSaved, setServicesSaved] = useState(false);
+  const [servicesHint, setServicesHint] = useState(false);
+  const servicesDirtyRef = useRef(false);
+  const [staffQuickOpen, setStaffQuickOpen] = useState(false);
+  const [staffQuickDraft, setStaffQuickDraft] = useState({
+    name: '',
+    positions: [],
+    phone: '',
+  });
+  const [staffQuickSaving, setStaffQuickSaving] = useState(false);
+  const [staffQuickError, setStaffQuickError] = useState('');
   const [notices, setNotices] = useState([]);
   const [shopReviews, setShopReviews] = useState([]);
   const [bookingDetail, setBookingDetail] = useState(null);
@@ -406,9 +431,10 @@ export default function ExecutorDashboardPage() {
     if (profileResponse.ok) {
       const data = await profileResponse.json();
       setProfile(data);
-      setPickedServices(
-        (data.services || []).map(catalogServiceName).filter(Boolean),
-      );
+      const incoming = (data.services || []).map(catalogServiceName).filter(Boolean);
+      setPickedServices((current) => (
+        servicesDirtyRef.current ? current : incoming
+      ));
       setProfileDraft(profileToDraft(data, user));
       if (data.name && data.name !== user?.name) {
         patchUser?.({ name: data.name });
@@ -546,6 +572,7 @@ export default function ExecutorDashboardPage() {
     const saved = [...serviceList].sort().join('|');
     return current !== saved;
   }, [pickedServices, serviceList]);
+  servicesDirtyRef.current = servicesDirty;
 
   const askConfirm = (order) => {
     setConfirmError('');
@@ -710,7 +737,13 @@ export default function ExecutorDashboardPage() {
   };
 
   const openNewBooking = (preset = {}) => {
+    if (servicesDirty) {
+      saveServices(pickedServices);
+    }
     setNewBookingError('');
+    setStaffQuickError('');
+    setStaffQuickDraft({ name: '', positions: [], phone: '' });
+    setStaffQuickOpen(false);
     setNewBooking({
       guest_name: '',
       title: '',
@@ -721,14 +754,23 @@ export default function ExecutorDashboardPage() {
     setNewBookingOpen(true);
   };
 
+  const goAddServicesFromBooking = () => {
+    setNewBookingOpen(false);
+    setStaffQuickOpen(false);
+    setServicesHint(true);
+    openCabinetSection('services');
+  };
+
   const submitNewBooking = async (event) => {
     event.preventDefault();
     if (!newBooking.guest_name.trim()) {
       setNewBookingError('Укажите имя клиента');
       return;
     }
-    const title = resolveBestService(newBooking.title, serviceList)
-      || newBooking.title.trim();
+    const title = resolveBestService(
+      newBooking.title,
+      serviceList.length ? serviceList : pickedServices,
+    ) || newBooking.title.trim();
     if (!title) {
       setNewBookingError('Выберите услугу из списка');
       return;
@@ -771,17 +813,75 @@ export default function ExecutorDashboardPage() {
     }
   };
 
-  const saveStaff = async (event) => {
-    event.preventDefault();
-    if (!staffDraft.name.trim()) return;
+  const createStaffMember = async (draft) => {
     const response = await authFetch('/api/staff', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(staffDraft),
+      body: JSON.stringify({
+        name: draft.name.trim(),
+        position: joinPositions(draft.positions),
+        phone: (draft.phone || '').trim() || null,
+      }),
     });
-    if (response.ok) {
-      setStaffDraft({ name: '', position: 'Мастер', phone: '' });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return {
+        ok: false,
+        error: typeof data?.detail === 'string'
+          ? data.detail
+          : 'Не удалось добавить сотрудника',
+      };
+    }
+    return { ok: true, data };
+  };
+
+  const saveStaff = async (event) => {
+    event.preventDefault();
+    if (!staffDraft.name.trim()) return;
+    if (!staffDraft.positions.length) return;
+    if (staffDraft.phone.trim() && !isCompleteShopPhone(staffDraft.phone)) return;
+    const result = await createStaffMember(staffDraft);
+    if (result.ok) {
+      setStaffDraft({ name: '', positions: [], phone: '' });
       await loadExecutorData();
+    }
+  };
+
+  const addStaffFromBooking = async () => {
+    if (!staffQuickDraft.name.trim()) {
+      setStaffQuickError('Укажите имя сотрудника');
+      return;
+    }
+    if (!staffQuickDraft.positions.length) {
+      setStaffQuickError('Отметьте хотя бы одну должность');
+      return;
+    }
+    if (staffQuickDraft.phone.trim() && !isCompleteShopPhone(staffQuickDraft.phone)) {
+      setStaffQuickError('Укажите телефон в формате +7 (999) 123-45-67');
+      return;
+    }
+    setStaffQuickSaving(true);
+    setStaffQuickError('');
+    try {
+      const result = await createStaffMember(staffQuickDraft);
+      if (!result.ok) {
+        setStaffQuickError(result.error);
+        return;
+      }
+      setStaff((current) => (
+        current.some((item) => item.id === result.data.id)
+          ? current
+          : [...current, result.data]
+      ));
+      setNewBooking((draft) => ({
+        ...draft,
+        staff_id: String(result.data.id),
+      }));
+      setStaffQuickDraft({ name: '', positions: [], phone: '' });
+      setStaffQuickOpen(false);
+      await loadExecutorData();
+    } finally {
+      setStaffQuickSaving(false);
     }
   };
 
@@ -822,11 +922,11 @@ export default function ExecutorDashboardPage() {
     });
   };
 
-  const saveServices = async () => {
+  const saveServices = async (list = pickedServices) => {
     setServicesSaving(true);
     setServicesError('');
     setServicesSaved(false);
-    const services = pickedServices.map((name) => [name]);
+    const services = list.map((name) => [name]);
     try {
       const response = await authFetch('/api/executors/me', {
         method: 'PATCH',
@@ -843,11 +943,24 @@ export default function ExecutorDashboardPage() {
         return;
       }
       setServicesSaved(true);
+      if (list.length > 0) {
+        setServicesHint(false);
+      }
       await loadExecutorData();
     } finally {
       setServicesSaving(false);
     }
   };
+
+  useEffect(() => {
+    if (!servicesDirty || user?.role !== 'executor') {
+      return undefined;
+    }
+    const timer = window.setTimeout(() => {
+      saveServices(pickedServices);
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [pickedServices, servicesDirty, user?.role]);
 
   const startEditProfile = () => {
     setProfileError('');
@@ -855,9 +968,35 @@ export default function ExecutorDashboardPage() {
     setEditingProfile(true);
   };
 
+  const closeNewBooking = () => {
+    if (newBookingSaving) {
+      return;
+    }
+    setNewBookingOpen(false);
+    setStaffQuickOpen(false);
+    setStaffQuickError('');
+  };
+
+  const closeStaffQuick = () => {
+    if (staffQuickSaving) {
+      return;
+    }
+    setStaffQuickOpen(false);
+    setStaffQuickError('');
+  };
+
   const saveProfile = async (event) => {
     event.preventDefault();
     setProfileError('');
+    if (!isCompleteHoursRange(profileDraft.hoursFrom, profileDraft.hoursTo)) {
+      setProfileError('Укажите начало и конец рабочего дня');
+      return;
+    }
+    const hours = joinHoursRange(profileDraft.hoursFrom, profileDraft.hoursTo);
+    if (hours && !isValidHoursRange(hours)) {
+      setProfileError('Часы работы укажите в формате 09:00–20:00');
+      return;
+    }
     const response = await authFetch('/api/executors/me', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -866,7 +1005,7 @@ export default function ExecutorDashboardPage() {
         phone: profileDraft.phone.trim(),
         address: profileDraft.address.trim(),
         city: profileDraft.city,
-        hours: profileDraft.hours.trim() || PLACEHOLDER_HOURS,
+        hours: hours || PLACEHOLDER_HOURS,
         description: profileDraft.description.trim() || PLACEHOLDER_DESCRIPTION,
         status: profileDraft.status,
       }),
@@ -1130,17 +1269,35 @@ export default function ExecutorDashboardPage() {
                   placeholder="Имя сотрудника"
                   required
                 />
-                <input
-                  value={staffDraft.position}
-                  onChange={(event) => setStaffDraft((draft) => ({ ...draft, position: event.target.value }))}
-                  placeholder="Должность, например мастер"
+                <PositionPicker
+                  value={staffDraft.positions}
+                  onChange={(positions) => setStaffDraft((draft) => ({
+                    ...draft,
+                    positions,
+                  }))}
                 />
                 <input
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
                   value={staffDraft.phone}
-                  onChange={(event) => setStaffDraft((draft) => ({ ...draft, phone: event.target.value }))}
-                  placeholder="Телефон"
+                  onChange={(event) => setStaffDraft((draft) => ({
+                    ...draft,
+                    phone: formatShopPhone(event.target.value),
+                  }))}
+                  placeholder="+7 (999) 123-45-67"
                 />
-                <button type="submit" className="primary-button small">Добавить</button>
+                <button
+                  type="submit"
+                  className="primary-button small"
+                  disabled={
+                    !staffDraft.name.trim()
+                    || !staffDraft.positions.length
+                    || (Boolean(staffDraft.phone.trim()) && !isCompleteShopPhone(staffDraft.phone))
+                  }
+                >
+                  Добавить
+                </button>
               </form>
               {staff.length > 0 ? (
                 <ul className="ex-client-list">
@@ -1262,11 +1419,17 @@ export default function ExecutorDashboardPage() {
                     </label>
                     <label>
                       Часы работы
-                      <input
-                        value={profileDraft.hours}
-                        onChange={(event) => setProfileDraft((d) => ({ ...d, hours: event.target.value }))}
-                        placeholder="09:00–20:00"
+                      <HoursRangeInputs
+                        idPrefix="profile-hours"
+                        from={profileDraft.hoursFrom}
+                        to={profileDraft.hoursTo}
+                        onChange={({ from, to }) => setProfileDraft((d) => ({
+                          ...d,
+                          hoursFrom: from,
+                          hoursTo: to,
+                        }))}
                       />
+                      <small>Формат 09:00–20:00</small>
                     </label>
                     <label>
                       Описание
@@ -1333,9 +1496,9 @@ export default function ExecutorDashboardPage() {
               wide
             >
               <p className="role-empty-note">
-                Отметьте услуги, которые выполняет автосервис.
-                Этот же список увидят клиенты при записи, и по нему
-                сработает подстановка в новой записи.
+                {servicesHint && pickedServices.length === 0
+                  ? 'Чтобы создать запись, сначала отметьте услуги. Выбор сохраняется сразу.'
+                  : 'Отметьте услуги, которые выполняет автосервис. Выбор сохраняется сразу.'}
               </p>
               <ServicesCatalogEditor
                 groups={catalogGroups}
@@ -1348,18 +1511,12 @@ export default function ExecutorDashboardPage() {
               ) : null}
               <div className="ex-svc-save">
                 <span>
-                  {servicesSaved && !servicesDirty
-                    ? 'Сохранено'
-                    : `${pickedServices.length} услуг в профиле`}
+                  {servicesSaving
+                    ? 'Сохраняем…'
+                    : servicesSaved && !servicesDirty
+                      ? 'Сохранено автоматически'
+                      : `${pickedServices.length} услуг в профиле`}
                 </span>
-                <button
-                  type="button"
-                  className="customer-primary-button"
-                  disabled={servicesSaving || !servicesDirty}
-                  onClick={saveServices}
-                >
-                  {servicesSaving ? 'Сохраняем…' : 'Сохранить услуги'}
-                </button>
               </div>
             </Panel>
           )}
@@ -1466,7 +1623,7 @@ export default function ExecutorDashboardPage() {
         <div
           className="confirm-modal-backdrop"
           role="presentation"
-          onClick={() => !newBookingSaving && setNewBookingOpen(false)}
+          onClick={closeNewBooking}
         >
           <div
             className="confirm-modal booking-detail-modal"
@@ -1477,7 +1634,7 @@ export default function ExecutorDashboardPage() {
             <button
               type="button"
               className="confirm-modal-close"
-              onClick={() => setNewBookingOpen(false)}
+              onClick={closeNewBooking}
               aria-label="Закрыть"
             >
               ×
@@ -1499,41 +1656,61 @@ export default function ExecutorDashboardPage() {
               <div className="cancel-reason-field">
                 <span>Услуга</span>
                 {serviceList.length > 0 ? (
-                  <ServiceSuggest
+                  <FilterSelect
                     value={newBooking.title}
-                    options={serviceList}
-                    onChange={(title) => setNewBooking((draft) => ({
-                      ...draft,
-                      title,
+                    placeholder="Выберите услугу"
+                    searchPlaceholder="Поиск"
+                    options={serviceList.map((name) => ({
+                      value: name,
+                      label: name,
                     }))}
-                    placeholder="Начните вводить, например замена"
+                    action={{ value: '__add__', label: '+ Добавить услуги' }}
+                    onChange={(value) => {
+                      if (value === '__add__') {
+                        goAddServicesFromBooking();
+                        return;
+                      }
+                      setNewBooking((draft) => ({
+                        ...draft,
+                        title: value,
+                      }));
+                    }}
                   />
                 ) : (
-                  <p className="confirm-modal-error">
-                    Сначала отметьте услуги в разделе «Услуги».
-                  </p>
+                  <button
+                    type="button"
+                    className="ex-booking-add-btn"
+                    onClick={goAddServicesFromBooking}
+                  >
+                    + Добавить услуги
+                  </button>
                 )}
               </div>
-              <label className="cancel-reason-field">
-                Мастер
-                <select
+              <div className="cancel-reason-field">
+                <span>Мастер</span>
+                <FilterSelect
                   value={newBooking.staff_id}
-                  onChange={(event) => setNewBooking((draft) => ({
-                    ...draft,
-                    staff_id: event.target.value,
+                  placeholder="Выберите мастера"
+                  searchPlaceholder="Поиск"
+                  options={staff.map((item) => ({
+                    value: String(item.id),
+                    label: item.position ? `${item.name} · ${item.position}` : item.name,
                   }))}
-                >
-                  {staff.length > 0 ? (
-                    staff.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}{item.position ? ` · ${item.position}` : ''}
-                      </option>
-                    ))
-                  ) : (
-                    <option value="">Сначала добавьте сотрудников</option>
-                  )}
-                </select>
-              </label>
+                  action={{ value: '__new__', label: '+ Новый мастер' }}
+                  onChange={(value) => {
+                    if (value === '__new__') {
+                      setStaffQuickError('');
+                      setStaffQuickDraft({ name: '', positions: [], phone: '' });
+                      setStaffQuickOpen(true);
+                      return;
+                    }
+                    setNewBooking((draft) => ({
+                      ...draft,
+                      staff_id: value,
+                    }));
+                  }}
+                />
+              </div>
               <div className="ex-new-form-row">
                 <label className="cancel-reason-field">
                   Дата
@@ -1568,19 +1745,95 @@ export default function ExecutorDashboardPage() {
                 <button
                   type="button"
                   className="customer-outline-button"
-                  onClick={() => setNewBookingOpen(false)}
+                  onClick={closeNewBooking}
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
                   className="customer-primary-button"
-                  disabled={newBookingSaving || staff.length === 0 || serviceList.length === 0}
+                  disabled={newBookingSaving || !newBooking.staff_id || !newBooking.title}
                 >
                   {newBookingSaving ? 'Сохраняем…' : 'Создать запись'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      ) : null}
+
+      {staffQuickOpen ? (
+        <div
+          className="confirm-modal-backdrop is-nested"
+          role="presentation"
+          onClick={closeStaffQuick}
+        >
+          <div
+            className="confirm-modal ex-staff-modal"
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="confirm-modal-close"
+              onClick={closeStaffQuick}
+              aria-label="Закрыть"
+            >
+              ×
+            </button>
+            <p className="confirm-modal-label">Сотрудники</p>
+            <h2>Новый мастер</h2>
+            <div className="ex-quick-staff">
+              <input
+                value={staffQuickDraft.name}
+                onChange={(event) => setStaffQuickDraft((draft) => ({
+                  ...draft,
+                  name: event.target.value,
+                }))}
+                placeholder="Имя, например Пётр Петров"
+              />
+              <PositionPicker
+                value={staffQuickDraft.positions}
+                onChange={(positions) => setStaffQuickDraft((draft) => ({
+                  ...draft,
+                  positions,
+                }))}
+                disabled={staffQuickSaving}
+              />
+              <input
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                value={staffQuickDraft.phone}
+                onChange={(event) => setStaffQuickDraft((draft) => ({
+                  ...draft,
+                  phone: formatShopPhone(event.target.value),
+                }))}
+                placeholder="+7 (999) 123-45-67"
+              />
+              {staffQuickError ? (
+                <p className="confirm-modal-error">{staffQuickError}</p>
+              ) : null}
+              <div className="confirm-modal-actions">
+                <button
+                  type="button"
+                  className="customer-outline-button"
+                  onClick={closeStaffQuick}
+                  disabled={staffQuickSaving}
+                >
+                  Отмена
+                </button>
+                <button
+                  type="button"
+                  className="customer-primary-button"
+                  disabled={staffQuickSaving}
+                  onClick={addStaffFromBooking}
+                >
+                  {staffQuickSaving ? 'Добавляем…' : 'Добавить в заявку'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       ) : null}
@@ -1758,17 +2011,20 @@ function OverviewBoard({
               </div>
             </div>
             <div className="ex-tt-filters">
-              {['day', 'week', 'month'].map((view) => (
-                <button
-                  key={view}
-                  type="button"
-                  className={boardView === view ? 'is-active' : ''}
-                  onClick={() => setBoardView(view)}
-                >
-                  {view === 'day' ? 'День' : view === 'week' ? 'Неделя' : 'Месяц'}
-                </button>
-              ))}
+              <div className="ex-tt-views">
+                {['day', 'week', 'month'].map((view) => (
+                  <button
+                    key={view}
+                    type="button"
+                    className={boardView === view ? 'is-active' : ''}
+                    onClick={() => setBoardView(view)}
+                  >
+                    {view === 'day' ? 'День' : view === 'week' ? 'Неделя' : 'Месяц'}
+                  </button>
+                ))}
+              </div>
               <select
+                className="ex-tt-filter-select"
                 value={serviceFilter}
                 onChange={(event) => setServiceFilter(event.target.value)}
               >
@@ -1778,6 +2034,7 @@ function OverviewBoard({
                 ))}
               </select>
               <select
+                className="ex-tt-filter-select is-staff"
                 value={staffFilter}
                 onChange={(event) => setStaffFilter?.(event.target.value)}
               >
@@ -1907,6 +2164,7 @@ function WeekGrid({ days, bookings, confirmingId, onOpenBooking, onSlotClick }) 
   const firstHitRef = useRef(null);
   const isDay = days.length === 1;
   const nowHour = currentHourLabel();
+  const today = todayIso();
   const byCell = useMemo(() => {
     const map = new Map();
     bookings.forEach((item) => {
@@ -1935,7 +2193,10 @@ function WeekGrid({ days, bookings, confirmingId, onOpenBooking, onSlotClick }) 
       <div className="ex-week-head">
         <span className="ex-week-time-label">Время</span>
         {days.map((day) => (
-          <div key={day.iso} className={`ex-week-col-title ${day.iso === todayIso() ? 'is-today' : ''}`}>
+          <div
+            key={day.iso}
+            className={`ex-week-col-title${day.iso === today ? ' is-today' : ''}${day.weekend ? ' is-weekend' : ''}`}
+          >
             <b>{day.label}</b>
             <span>{isDay ? formatDateLabel(day.iso) : day.date}</span>
           </div>
@@ -1952,7 +2213,13 @@ function WeekGrid({ days, bookings, confirmingId, onOpenBooking, onSlotClick }) 
               <div
                 key={`${day.iso}-${hour}`}
                 ref={pin ? firstHitRef : undefined}
-                className={`ex-week-cell ${items.length ? 'has-item' : ''}`}
+                className={[
+                  'ex-week-cell',
+                  items.length ? 'has-item' : '',
+                  day.iso === today ? 'is-today' : '',
+                  day.weekend ? 'is-weekend' : '',
+                  hour === nowHour && day.iso === today ? 'is-now' : '',
+                ].filter(Boolean).join(' ')}
               >
                 {items.length === 0 ? (
                   <button
@@ -2002,16 +2269,23 @@ const PLACEHOLDER_DESCRIPTION = 'Профиль автосервиса ещё н
 
 function profileToDraft(profile, user) {
   const hours = profile?.hours || '';
+  const range = parseHoursRange(!hours || hours === PLACEHOLDER_HOURS ? '' : hours);
   const description = profile?.description || '';
   return {
     name: profile?.name || user?.name || '',
     phone: profile?.phone || '',
     address: profile?.address || '',
     city: profile?.city || DEFAULT_CITY,
-    hours: !hours || hours === PLACEHOLDER_HOURS ? '' : hours,
+    hoursFrom: range.from,
+    hoursTo: range.to,
     description: !description || description === PLACEHOLDER_DESCRIPTION ? '' : description,
     status: profile?.status || 'Открыто',
   };
+}
+
+function isCompleteShopPhone(value) {
+  const digits = String(value || '').replace(/\D/g, '');
+  return digits.length === 11 && digits.startsWith('7');
 }
 
 function formatShopPhone(value) {

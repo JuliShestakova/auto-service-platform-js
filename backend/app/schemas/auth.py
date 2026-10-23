@@ -22,7 +22,25 @@ ADDRESS_RE = re.compile(
     r"^[A-Za-zА-Яа-яЁё0-9][A-Za-zА-Яа-яЁё0-9\s.,/\-№#]{4,254}$"
 )
 PHONE_DIGITS_RE = re.compile(r"\D+")
-HOURS_RE = re.compile(r"^[\d\s.:\-–—]{0,50}$")
+HOURS_RE = re.compile(
+    r"^(?:[01]\d|2[0-3]):[0-5]\d[–\-—](?:[01]\d|2[0-3]):[0-5]\d$"
+)
+
+
+def normalize_shop_hours(value: str | None) -> str | None:
+    text = (value or "").strip()
+    if not text:
+        return None
+    text = (
+        text.replace(" ", "")
+        .replace("-", "–")
+        .replace("—", "–")
+    )
+    if not HOURS_RE.fullmatch(text):
+        raise ValueError("Укажите часы работы в формате 09:00–20:00")
+    return text
+
+
 ALLOWED_CITIES = {
     "Москва",
     "Санкт-Петербург",
@@ -122,15 +140,11 @@ class RegisterRequest(BaseModel):
                     "Укажите телефон в формате +7 (999) 123-45-67"
                 )
 
-            hours = (self.hours or "").strip()
-            if hours and not HOURS_RE.fullmatch(hours):
-                raise ValueError("Часы работы указаны некорректно")
-
             self.name = name
             self.city = city
             self.address = address
             self.phone = phone
-            self.hours = hours or None
+            self.hours = normalize_shop_hours(self.hours)
         else:
             if not NAME_RE.fullmatch(name):
                 raise ValueError(

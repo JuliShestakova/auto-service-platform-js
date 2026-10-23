@@ -1,4 +1,6 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
+
+from app.schemas.auth import normalize_shop_hours
 
 
 class ProfileUpdate(BaseModel):
@@ -20,3 +22,11 @@ class ExecutorProfileUpdate(BaseModel):
     description: str | None = Field(default=None, max_length=1000)
     status: str | None = Field(default=None, max_length=50)
     services: list[list[str]] | None = None
+
+    @field_validator("hours")
+    @classmethod
+    def validate_hours(cls, value: str | None) -> str | None:
+        text = (value or "").strip()
+        if not text or text == "Уточняется":
+            return text or None
+        return normalize_shop_hours(text)

@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import HoursRangeInputs from '../components/HoursRangeInputs';
 import { CITIES, DEFAULT_CITY } from '../data/cities';
+import {
+  isCompleteHoursRange,
+  isValidHoursRange,
+  joinHoursRange,
+} from '../utils/hours';
 
 const EMAIL_ALLOWED = /[^a-z0-9@._-]/g;
 const EMAIL_PATTERN = (
@@ -10,7 +16,6 @@ const EMAIL_PATTERN = (
 const NAME_PATTERN = /^[A-Za-zА-Яа-яЁё](?:[A-Za-zА-Яа-яЁё\s.'-]{0,98}[A-Za-zА-Яа-яЁё.])?$/;
 const SHOP_NAME_PATTERN = /^[A-Za-zА-Яа-яЁё0-9](?:[A-Za-zА-Яа-яЁё0-9\s.&«»"'-]{0,98}[A-Za-zА-Яа-яЁё0-9.«»"'])?$/;
 const ADDRESS_PATTERN = /^[A-Za-zА-Яа-яЁё0-9][A-Za-zА-Яа-яЁё0-9\s.,/\-№#]{4,254}$/;
-const HOURS_PATTERN = /^[\d\s.:\-–—]{0,50}$/;
 
 function normalizeEmail(value) {
   return String(value || '')
@@ -157,7 +162,8 @@ function RegisterPage({
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState(DEFAULT_CITY);
-  const [hours, setHours] = useState('');
+  const [hoursFrom, setHoursFrom] = useState('');
+  const [hoursTo, setHoursTo] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [acceptMarketing, setAcceptMarketing] = useState(false);
@@ -176,7 +182,7 @@ function RegisterPage({
     const trimmedName = name.trim();
     const normalizedEmail = normalizeEmail(email);
     const trimmedAddress = address.trim();
-    const trimmedHours = hours.trim();
+    const trimmedHours = joinHoursRange(hoursFrom, hoursTo);
 
     if (!trimmedName) {
       return isExecutor
@@ -206,8 +212,11 @@ function RegisterPage({
       if (!isValidPhone(phone)) {
         return 'Укажите телефон в формате +7 (999) 123-45-67';
       }
-      if (trimmedHours && !HOURS_PATTERN.test(trimmedHours)) {
-        return 'Часы работы указаны некорректно';
+      if (!isCompleteHoursRange(hoursFrom, hoursTo)) {
+        return 'Укажите начало и конец рабочего дня';
+      }
+      if (trimmedHours && !isValidHoursRange(trimmedHours)) {
+        return 'Часы работы укажите в формате 09:00–20:00';
       }
     } else if (!NAME_PATTERN.test(trimmedName)) {
       return 'Имя может содержать только буквы, пробел, дефис и точку';
@@ -250,7 +259,8 @@ function RegisterPage({
     phone,
     address,
     city,
-    hours,
+    hoursFrom,
+    hoursTo,
     acceptTerms,
     acceptPrivacy,
   ]);
@@ -279,7 +289,8 @@ function RegisterPage({
     setPhone('');
     setAddress('');
     setCity(DEFAULT_CITY);
-    setHours('');
+    setHoursFrom('');
+    setHoursTo('');
     setAcceptTerms(false);
     setAcceptPrivacy(false);
     setAcceptMarketing(false);
@@ -315,7 +326,7 @@ function RegisterPage({
     const normalizedEmail = normalizeEmail(email);
     const trimmedPhone = phone.trim();
     const trimmedAddress = address.trim();
-    const trimmedHours = hours.trim();
+    const trimmedHours = joinHoursRange(hoursFrom, hoursTo);
 
     setIsLoading(true);
 
@@ -539,23 +550,18 @@ function RegisterPage({
               </div>
 
               <div className="auth-field">
-                <label htmlFor="register-hours">Часы работы</label>
-                <input
-                  id="register-hours"
-                  name="hours"
-                  type="text"
-                  value={hours}
-                  onChange={(event) => {
-                    const next = event.target.value;
-                    if (next === '' || HOURS_PATTERN.test(next)) {
-                      setHours(next);
-                    }
-                  }}
-                  placeholder="09:00–20:00"
-                  maxLength={50}
+                <label htmlFor="register-hours-from">Часы работы</label>
+                <HoursRangeInputs
+                  idPrefix="register-hours"
+                  from={hoursFrom}
+                  to={hoursTo}
                   disabled={isLoading}
+                  onChange={({ from, to }) => {
+                    setHoursFrom(from);
+                    setHoursTo(to);
+                  }}
                 />
-                <small>Необязательно — можно заполнить позже в кабинете.</small>
+                <small>Необязательно. Формат 09:00–20:00 — можно заполнить позже в кабинете.</small>
               </div>
             </>
           ) : (

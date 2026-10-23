@@ -13,5 +13,5 @@ class Staff(Base):
         index=True,
     )
     name: Mapped[str] = mapped_column(String(100))
-    position: Mapped[str] = mapped_column(String(100), default="Мастер")
+    position: Mapped[str] = mapped_column(String(800), default="Мастер")
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)

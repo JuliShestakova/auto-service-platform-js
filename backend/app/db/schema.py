@@ -93,7 +93,7 @@ SCHEMA_STATEMENTS = (
         executor_id INTEGER NOT NULL
             REFERENCES executors(id) ON DELETE CASCADE,
         name VARCHAR(100) NOT NULL,
-        position VARCHAR(100) NOT NULL DEFAULT 'Мастер',
+        position VARCHAR(800) NOT NULL DEFAULT 'Мастер',
         phone VARCHAR(50)
     )
     """,
@@ -149,6 +149,10 @@ SCHEMA_STATEMENTS = (
     """
     ALTER TABLE users
     ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION
+    """,
+    """
+    ALTER TABLE staff
+    ALTER COLUMN position TYPE VARCHAR(800)
     """,
 )
 
