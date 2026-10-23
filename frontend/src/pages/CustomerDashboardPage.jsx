@@ -10,11 +10,15 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLocation as useClientLocation } from '../contexts/LocationContext';
 import FavoriteButton from '../components/FavoriteButton';
 import ServiceCardModal from '../components/ServiceCardModal';
+import ServiceSuggest from '../components/ServiceSuggest';
 import SiteHeader from '../components/SiteHeader';
+import { SERVICE_CATALOG } from '../data/serviceCatalog';
 import useFavorites from '../hooks/useFavorites';
+import { listServiceNames } from '../services/catalog';
 import { getExecutor, listExecutorReviews, listExecutors } from '../services/executors';
 import { createOrder, listOrders, updateOrder } from '../services/orders';
 import { createReview, deleteReview, listMyReviews } from '../services/reviews';
+import { resolveBestService, scoreServiceMatch } from '../utils/fuzzyService';
 
 import shopImage1 from '../assets/shops/shop-1.jpg';
 import shopImage2 from '../assets/shops/shop-2.jpg';
@@ -65,6 +69,19 @@ function formatVisitLabel(visitDate, visitTime) {
   return visitTime ? `${dayLabel}, ${visitTime}` : dayLabel;
 }
 
+function orderMatchesWork(order, query) {
+  const needle = String(query || '').trim();
+  if (!needle) {
+    return true;
+  }
+  const title = String(order?.title || '').trim();
+  if (!title) {
+    return false;
+  }
+  return scoreServiceMatch(needle, title) > 0
+    || scoreServiceMatch(title, needle) > 0;
+}
+
 function orderStatusMeta(status) {
   const value = String(status || '');
   if (value === 'Завершён') {
@@ -110,6 +127,23 @@ function HeartStatIcon() {
 // ======================================================
 // ИКОНКИ
 // ======================================================
+
+function SearchIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16 16 4 4" />
+    </svg>
+  );
+}
 
 function ClipboardIcon() {
   return (
@@ -206,6 +240,8 @@ function CustomerDashboardPage({
   const [reviewError, setReviewError] = useState('');
   const [reviewSaving, setReviewSaving] = useState(false);
   const [deletingReviewId, setDeletingReviewId] = useState(null);
+  const [catalogNames, setCatalogNames] = useState(SERVICE_CATALOG);
+  const [workQuery, setWorkQuery] = useState('');
 
 
   // ====================================================
@@ -252,6 +288,48 @@ function CustomerDashboardPage({
   const currentSection = getSectionFromPath();
   const isOverview = currentSection === 'overview';
   const isSettings = currentSection === 'settings';
+
+  const workOptions = useMemo(() => {
+    const fromOrders = orders
+      .map((order) => String(order.title || '').trim())
+      .filter(Boolean);
+    return [...new Set([...fromOrders, ...catalogNames.filter(Boolean)])];
+  }, [orders, catalogNames]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCatalog = async () => {
+      try {
+        const names = await listServiceNames();
+        if (!cancelled && names.length) {
+          setCatalogNames(names);
+        }
+      } catch {
+        // оставляем локальный каталог
+      }
+    };
+
+    loadCatalog();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const applyCabinetSearch = (rawWork = workQuery) => {
+    const resolved = resolveBestService(rawWork, workOptions)
+      || String(rawWork || '').trim();
+    setWorkQuery(resolved);
+    window.requestAnimationFrame(() => {
+      document
+        .getElementById('my-bookings')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
+  const clearCabinetSearch = () => {
+    setWorkQuery('');
+  };
 
 
   // ====================================================
@@ -346,6 +424,42 @@ function CustomerDashboardPage({
       .sort((left, right) => String(right.created_at || '').localeCompare(String(left.created_at || ''))),
     [orders],
   );
+
+  const filteredOrders = useMemo(
+    () => allOrders.filter((order) => orderMatchesWork(order, workQuery)),
+    [allOrders, workQuery],
+  );
+
+  const filteredActiveBookings = useMemo(
+    () => filteredOrders.filter((order) => (
+      order.status !== 'Завершён' && order.status !== 'Отменён'
+    )),
+    [filteredOrders],
+  );
+
+  const filteredNearestBooking = useMemo(() => {
+    const withDate = [...filteredActiveBookings].sort((left, right) => {
+      const leftKey = `${left.visit_date || '9999'}-${left.visit_time || ''}`;
+      const rightKey = `${right.visit_date || '9999'}-${right.visit_time || ''}`;
+      return leftKey.localeCompare(rightKey);
+    });
+    return withDate[0] || null;
+  }, [filteredActiveBookings]);
+
+  const searchActive = Boolean(workQuery.trim());
+  const visibleNearest = searchActive ? filteredNearestBooking : nearestBooking;
+  const visibleOrders = searchActive ? filteredOrders : allOrders;
+  const filteredReviews = useMemo(() => {
+    if (!searchActive) {
+      return myReviews;
+    }
+    const shopIds = new Set(
+      filteredOrders
+        .map((order) => Number(order.executor_id))
+        .filter(Boolean),
+    );
+    return myReviews.filter((review) => shopIds.has(Number(review.executor_id)));
+  }, [myReviews, searchActive, filteredOrders]);
 
   const reloadMyReviews = async () => {
     if (!user?.id) {
@@ -880,6 +994,40 @@ function CustomerDashboardPage({
 
           {isOverview && (
             <section className="cab-home">
+              <form
+                className="cab-search"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  applyCabinetSearch(workQuery);
+                }}
+              >
+                <div className="cab-search-field">
+                  <span className="cab-search-icon" aria-hidden="true">
+                    <SearchIcon />
+                  </span>
+                  <ServiceSuggest
+                    value={workQuery}
+                    options={workOptions}
+                    onChange={setWorkQuery}
+                    onPick={applyCabinetSearch}
+                    placeholder="Например, замена тормозных колодок"
+                  />
+                  {searchActive ? (
+                    <button
+                      type="button"
+                      className="cab-search-clear"
+                      onClick={clearCabinetSearch}
+                      aria-label="Сбросить поиск"
+                    >
+                      ×
+                    </button>
+                  ) : null}
+                </div>
+                <button type="submit" className="cab-search-submit">
+                  Найти
+                </button>
+              </form>
+
               <div className="cab-stats">
                 <a href="#my-bookings" className="cab-stat">
                   <span className="cab-stat-icon"><CalendarStatIcon /></span>
@@ -922,37 +1070,37 @@ function CustomerDashboardPage({
                       <a href="#my-bookings" className="cab-link">Все записи</a>
                     </div>
 
-                    {nearestBooking ? (
+                    {visibleNearest ? (
                       <div className="cab-booking-body">
                         <img
                           className="cab-booking-cover"
-                          src={shopCover(nearestBooking.executor_id || nearestBooking.id)}
+                          src={shopCover(visibleNearest.executor_id || visibleNearest.id)}
                           alt=""
                         />
                         <div className="cab-booking-info">
                           <div className="cab-booking-top">
                             <div>
                               <h3>
-                                {nearestBooking.executor_id ? (
+                                {visibleNearest.executor_id ? (
                                   <button
                                     type="button"
                                     className="cab-shop-link"
-                                    onClick={() => openServiceDetails(nearestBooking)}
+                                    onClick={() => openServiceDetails(visibleNearest)}
                                   >
-                                    {nearestBooking.executor_name || 'Автосервис'}
+                                    {visibleNearest.executor_name || 'Автосервис'}
                                   </button>
                                 ) : (
-                                  nearestBooking.executor_name || 'Автосервис'
+                                  visibleNearest.executor_name || 'Автосервис'
                                 )}
                               </h3>
-                              {nearestBooking.executor_rating != null && (
+                              {visibleNearest.executor_rating != null && (
                                 <p className="cab-rating">
-                                  ★ {nearestBooking.executor_rating}
+                                  ★ {visibleNearest.executor_rating}
                                 </p>
                               )}
                             </div>
-                            <span className={`cab-badge cab-badge-${orderStatusMeta(nearestBooking.status).tone}`}>
-                              {orderStatusMeta(nearestBooking.status).label}
+                            <span className={`cab-badge cab-badge-${orderStatusMeta(visibleNearest.status).tone}`}>
+                              {orderStatusMeta(visibleNearest.status).label}
                             </span>
                           </div>
 
@@ -960,17 +1108,17 @@ function CustomerDashboardPage({
                             <li>
                               <CalendarStatIcon />
                               {formatVisitLabel(
-                                nearestBooking.visit_date,
-                                nearestBooking.visit_time,
+                                visibleNearest.visit_date,
+                                visibleNearest.visit_time,
                               )}
                             </li>
                             <li>
                               <ClipboardIcon />
-                              {nearestBooking.title}
+                              {visibleNearest.title}
                             </li>
-                            {nearestBooking.staff_name ? (
+                            {visibleNearest.staff_name ? (
                               <li>
-                                Мастер: {nearestBooking.staff_name}
+                                Мастер: {visibleNearest.staff_name}
                               </li>
                             ) : null}
                           </ul>
@@ -979,26 +1127,26 @@ function CustomerDashboardPage({
                             <button
                               type="button"
                               className="customer-primary-button"
-                              onClick={() => openBookingDetail(nearestBooking)}
+                              onClick={() => openBookingDetail(visibleNearest)}
                             >
                               Подробнее
                             </button>
-                            {canLeaveReview(nearestBooking) ? (
+                            {canLeaveReview(visibleNearest) ? (
                               <button
                                 type="button"
                                 className="customer-outline-button"
-                                onClick={() => openReviewModal(nearestBooking)}
+                                onClick={() => openReviewModal(visibleNearest)}
                               >
                                 Оставить отзыв
                               </button>
                             ) : null}
-                            {nearestBooking.status !== 'Завершён'
-                              && nearestBooking.status !== 'Отменён' ? (
+                            {visibleNearest.status !== 'Завершён'
+                              && visibleNearest.status !== 'Отменён' ? (
                               <button
                                 type="button"
                                 className="customer-outline-button"
-                                disabled={cancelingId === nearestBooking.id}
-                                onClick={() => askCancelOrder(nearestBooking)}
+                                disabled={cancelingId === visibleNearest.id}
+                                onClick={() => askCancelOrder(visibleNearest)}
                               >
                                 Отменить запись
                               </button>
@@ -1009,11 +1157,21 @@ function CustomerDashboardPage({
                     ) : (
                       <div className="cab-empty">
                         <div className="cab-empty-icon"><CalendarStatIcon /></div>
-                        <h3>Записей пока нет</h3>
-                        <p>Запишитесь в автосервис — ближайшая запись появится здесь.</p>
-                        <Link to="/search" className="customer-primary-button">
-                          Записаться →
-                        </Link>
+                        <h3>
+                          {searchActive
+                            ? 'Нет активных записей с этой услугой'
+                            : 'Записей пока нет'}
+                        </h3>
+                        <p>
+                          {searchActive
+                            ? 'Проверьте список ниже — там есть и уже выполненные визиты.'
+                            : 'Запишитесь в автосервис — ближайшая запись появится здесь.'}
+                        </p>
+                        {searchActive ? null : (
+                          <Link to="/search" className="customer-primary-button">
+                            Записаться →
+                          </Link>
+                        )}
                       </div>
                     )}
                   </article>
@@ -1021,13 +1179,20 @@ function CustomerDashboardPage({
                   <article className="cab-card" id="my-bookings">
                     <div className="cab-card-head">
                       <h2>Мои записи</h2>
+                      {searchActive ? (
+                        <p className="cab-search-result-hint">
+                          {visibleOrders.length
+                            ? `Найдено: ${visibleOrders.length}, включая выполненные`
+                            : 'Ни текущих, ни выполненных записей'}
+                        </p>
+                      ) : null}
                     </div>
 
                     {ordersLoading ? (
                       <p className="cab-muted">Загрузка записей...</p>
-                    ) : allOrders.length > 0 ? (
+                    ) : visibleOrders.length > 0 ? (
                       <ul className="cab-booking-list">
-                        {allOrders.map((order) => {
+                        {visibleOrders.map((order) => {
                           const meta = orderStatusMeta(order.status);
                           const canCancel = (
                             order.status !== 'Завершён'
@@ -1125,11 +1290,29 @@ function CustomerDashboardPage({
                       </ul>
                     ) : (
                       <div className="cab-empty cab-empty-compact">
-                        <h3>Записей пока нет</h3>
-                        <p>Запишитесь в автосервис — визиты появятся здесь.</p>
-                        <Link to="/search" className="customer-primary-button">
-                          Найти автосервис →
-                        </Link>
+                        <h3>
+                          {searchActive
+                            ? `Нет записей «${workQuery.trim()}»`
+                            : 'Записей пока нет'}
+                        </h3>
+                        <p>
+                          {searchActive
+                            ? 'Среди текущих и уже выполненных услуг ничего не нашлось.'
+                            : 'Запишитесь в автосервис — визиты появятся здесь.'}
+                        </p>
+                        {searchActive ? (
+                          <button
+                            type="button"
+                            className="customer-outline-button"
+                            onClick={clearCabinetSearch}
+                          >
+                            Сбросить поиск
+                          </button>
+                        ) : (
+                          <Link to="/search" className="customer-primary-button">
+                            Найти автосервис →
+                          </Link>
+                        )}
                       </div>
                     )}
                   </article>
@@ -1208,9 +1391,9 @@ function CustomerDashboardPage({
                     <div className="cab-card-head">
                       <h2>Мои отзывы</h2>
                     </div>
-                    {myReviews.length > 0 ? (
+                    {filteredReviews.length > 0 ? (
                       <ul className="cab-review-list">
-                        {myReviews.slice(0, 6).map((review) => {
+                        {filteredReviews.slice(0, 6).map((review) => {
                           const shop = favoriteShops.find(
                             (item) => Number(item.id) === Number(review.executor_id),
                           );

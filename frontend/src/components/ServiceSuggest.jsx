@@ -9,6 +9,7 @@ export default function ServiceSuggest({
   options,
   onChange,
   onResolvedChange,
+  onPick,
   placeholder = 'Например, замена тормозных колодок',
 }) {
   const [open, setOpen] = useState(false);
@@ -49,6 +50,7 @@ export default function ServiceSuggest({
     onChange?.(name);
     onResolvedChange?.(name);
     setOpen(false);
+    onPick?.(name);
   };
 
   const resolveCurrent = () => {
@@ -98,6 +100,7 @@ export default function ServiceSuggest({
             const best = resolveCurrent();
             setQuery(best);
             setOpen(false);
+            onPick?.(best);
           }
 
           if (event.key === 'Escape') {
