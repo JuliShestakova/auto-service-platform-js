@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCity } from '../contexts/CityContext';
 import { DEFAULT_CITY } from '../data/cities';
+import { getExecutor, listExecutorReviews } from '../services/executors';
+import { canCustomerReview, createReview, deleteReview } from '../services/reviews';
 
 function formatReviewDate(value) {
   if (!value) {
@@ -38,19 +40,13 @@ function ExecutorDetailsPage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [deletingReviewId, setDeletingReviewId] = useState(null);
 
-  const canLeaveReview = Boolean(
-    user && (user.role === 'customer' || user.role === 'executor')
-  );
+  const canLeaveReview = canCustomerReview(user);
   const alreadyReviewed = Boolean(
     user && reviews.some((item) => item.user_id === user.id)
   );
 
   const loadReviews = async () => {
-    const response = await fetch(`/api/executors/${id}/reviews`);
-    if (!response.ok) {
-      throw new Error('Не удалось загрузить отзывы');
-    }
-    setReviews(await response.json());
+    setReviews(await listExecutorReviews(id));
   };
 
   useEffect(() => {
@@ -59,18 +55,13 @@ function ExecutorDetailsPage() {
       setError('');
 
       try {
-        const response = await fetch(`/api/executors/${id}`);
-
-        if (response.status === 404) {
+        const data = await getExecutor(id);
+        if (!data) {
           setExecutor(null);
           return;
         }
 
-        if (!response.ok) {
-          throw new Error('Не удалось загрузить автосервис');
-        }
-
-        setExecutor(await response.json());
+        setExecutor(data);
         await loadReviews();
 
         if (window.location.hash === '#reviews') {
@@ -109,26 +100,13 @@ function ExecutorDetailsPage() {
     setSubmitting(true);
 
     try {
-      const response = await authFetch(`/api/executors/${id}/reviews`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          rating: Number(rating),
-          text: text.trim(),
-        }),
+      const { ok, error } = await createReview(authFetch, id, {
+        rating: Number(rating),
+        text: text.trim(),
       });
 
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        const detail = data?.detail;
-        throw new Error(
-          typeof detail === 'string'
-            ? detail
-            : 'Не удалось отправить отзыв'
-        );
+      if (!ok) {
+        throw new Error(error || 'Не удалось отправить отзыв');
       }
 
       setText('');
@@ -136,9 +114,9 @@ function ExecutorDetailsPage() {
       setSuccessMessage('Спасибо! Ваш отзыв сохранён.');
       await loadReviews();
 
-      const executorResponse = await fetch(`/api/executors/${id}`);
-      if (executorResponse.ok) {
-        setExecutor(await executorResponse.json());
+      const executorData = await getExecutor(id);
+      if (executorData) {
+        setExecutor(executorData);
       }
     } catch (submitErr) {
       setSubmitError(
@@ -156,16 +134,14 @@ function ExecutorDetailsPage() {
     setDeletingReviewId(review.id);
     setSubmitError('');
     try {
-      const response = await authFetch(`/api/reviews/${review.id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
+      const { ok } = await deleteReview(authFetch, review.id);
+      if (!ok) {
         throw new Error('Не удалось удалить отзыв');
       }
       setReviews((current) => current.filter((item) => item.id !== review.id));
-      const executorResponse = await fetch(`/api/executors/${id}`);
-      if (executorResponse.ok) {
-        setExecutor(await executorResponse.json());
+      const executorData = await getExecutor(id);
+      if (executorData) {
+        setExecutor(executorData);
       }
     } catch (deleteErr) {
       setSubmitError(
@@ -271,16 +247,14 @@ function ExecutorDetailsPage() {
       </article>
 
       <section className="search-summary">
-        <h2>Услуги и цены</h2>
+        <h2>Услуги</h2>
         {services.length === 0 && <p>Услуги пока не указаны</p>}
         {services.map((service) => {
           const name = Array.isArray(service) ? service[0] : service.name;
-          const price = Array.isArray(service) ? service[1] : service.price;
 
           return (
             <p className="result-price" key={name}>
               {name}
-              <strong>{price || 'по запросу'}</strong>
             </p>
           );
         })}

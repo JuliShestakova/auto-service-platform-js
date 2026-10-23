@@ -127,12 +127,8 @@ function ServiceGlyph({ name }) {
 
 function serviceRows(executor) {
   return (executor?.services || [])
-    .map((item) => (
-      Array.isArray(item)
-        ? [item[0], item[1]]
-        : [item?.name, item?.price]
-    ))
-    .filter((item) => item[0]);
+    .map((item) => (Array.isArray(item) ? item[0] : item?.name))
+    .filter(Boolean);
 }
 
 function reviewInitials(name) {
@@ -210,7 +206,7 @@ export default function ServiceCardModal({
   const reviewCount = reviews.length || Number(executor?.reviews) || 0;
   const ownReview = reviews.find((item) => Number(item.user_id) === Number(user?.id));
   const canWriteReview = Boolean(
-    user && (user.role === 'customer' || user.role === 'executor') && !ownReview
+    user?.role === 'customer' && !ownReview
   );
   useEffect(() => {
     setReviewRating(5);
@@ -392,7 +388,7 @@ export default function ServiceCardModal({
             <div className="price-section">
               <div className="price-section-header">
                 <div>
-                  <p className="section-label">Услуги и цены</p>
+                  <p className="section-label">Услуги</p>
                   <h3>Выберите необходимую работу</h3>
                 </div>
                 {rows.length > 4 ? (
@@ -402,7 +398,7 @@ export default function ServiceCardModal({
                 ) : null}
               </div>
               <div className="price-list scm-price-list">
-                {rows.map(([name, price]) => (
+                {rows.map((name) => (
                   <button
                     type="button"
                     key={name}
@@ -417,7 +413,6 @@ export default function ServiceCardModal({
                       <span className="scm-price-icon"><ServiceGlyph name={name} /></span>
                       <span>{name}</span>
                     </span>
-                    <strong>{price || 'по запросу'}</strong>
                     <span className="scm-price-chevron" aria-hidden="true">
                       <ChevronIcon />
                     </span>
@@ -456,7 +451,7 @@ export default function ServiceCardModal({
                 <span>{reviewCount} отзывов</span>
               </div>
 
-              {ownReview ? (
+              {user?.role === 'customer' && ownReview ? (
                 <p className="review-login-hint">
                   Вы уже оставляли отзыв об этом сервисе.
                 </p>

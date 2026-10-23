@@ -41,6 +41,7 @@ import ProtectedRoute from './contexts/ProtectedRoute';
 
 function App() {
   const [authModal, setAuthModal] = useState(null);
+  const [registerRole, setRegisterRole] = useState('customer');
 
 
   /* =====================================================
@@ -52,7 +53,8 @@ function App() {
   };
 
 
-  const openRegister = () => {
+  const openRegister = (role = 'customer') => {
+    setRegisterRole(role === 'executor' ? 'executor' : 'customer');
     setAuthModal('register');
   };
 
@@ -413,6 +415,7 @@ function App() {
 
                 <RegisterPage
                   isModal
+                  initialRole={registerRole}
                   onClose={closeAuth}
                   onSwitchToLogin={openLogin}
                 />

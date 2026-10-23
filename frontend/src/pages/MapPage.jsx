@@ -15,6 +15,9 @@ import ServiceSuggest from '../components/ServiceSuggest';
 import SiteHeader from '../components/SiteHeader';
 import useFavorites from '../hooks/useFavorites';
 import { shopCoords } from '../utils/geo';
+import { listExecutorReviews, listExecutors } from '../services/executors';
+import { createOrder } from '../services/orders';
+import { canCustomerReview, createReview, deleteReview } from '../services/reviews';
 import shopImage1 from '../assets/shops/shop-1.jpg';
 import shopImage2 from '../assets/shops/shop-2.jpg';
 import shopImage3 from '../assets/shops/shop-3.jpg';
@@ -91,8 +94,11 @@ function MapPage({ onLogin, onRegister }) {
 
   useEffect(() => {
     const load = async () => {
-      const response = await fetch(`/api/executors?city=${encodeURIComponent(city)}`);
-      if (response.ok) setExecutors(await response.json());
+      try {
+        setExecutors(await listExecutors({ city }));
+      } catch {
+        /* оставляем текущий список */
+      }
     };
     load();
   }, [city]);
@@ -193,8 +199,7 @@ function MapPage({ onLogin, onRegister }) {
       return undefined;
     }
     let cancelled = false;
-    fetch(`/api/executors/${bookingExecutor.id}/reviews`)
-      .then((response) => (response.ok ? response.json() : []))
+    listExecutorReviews(bookingExecutor.id)
       .then((data) => { if (!cancelled) setBookingReviews(data); })
       .catch(() => { if (!cancelled) setBookingReviews([]); });
     return () => { cancelled = true; };
@@ -222,18 +227,14 @@ function MapPage({ onLogin, onRegister }) {
     }
     setBookingSaving(true);
     try {
-      const response = await authFetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: bookingService,
-          description: '',
-          executor_id: bookingExecutor.id,
-          visit_date: bookingDate,
-          visit_time: bookingTime,
-        }),
+      const { ok } = await createOrder(authFetch, {
+        title: bookingService,
+        description: '',
+        executor_id: bookingExecutor.id,
+        visit_date: bookingDate,
+        visit_time: bookingTime,
       });
-      if (!response.ok) {
+      if (!ok) {
         setBookingError('Не удалось сохранить запись');
         return;
       }
@@ -248,20 +249,21 @@ function MapPage({ onLogin, onRegister }) {
       onLogin?.();
       return { error: 'Войдите, чтобы оставить отзыв' };
     }
-    const response = await authFetch(`/api/executors/${bookingExecutor.id}/reviews`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rating, text }),
+    if (!canCustomerReview(user)) {
+      return { error: 'Отзывы могут оставлять только клиенты' };
+    }
+    const { ok, data, error } = await createReview(authFetch, bookingExecutor.id, {
+      rating,
+      text,
     });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) return { error: data.detail || 'Не удалось отправить отзыв' };
+    if (!ok) return { error: error || 'Не удалось отправить отзыв' };
     setBookingReviews((current) => [data, ...current]);
     return { ok: true };
   };
 
   const deleteShopReview = async (review) => {
-    const response = await authFetch(`/api/reviews/${review.id}`, { method: 'DELETE' });
-    if (!response.ok) return;
+    const { ok } = await deleteReview(authFetch, review.id);
+    if (!ok) return;
     setBookingReviews((current) => current.filter((item) => item.id !== review.id));
   };
 
@@ -346,7 +348,12 @@ function MapPage({ onLogin, onRegister }) {
                 <button type="button" className="map-card-main" onClick={() => setSelectedId(shop.id)}>
                   <img src={shopCover(shop.id)} alt="" />
                   <div>
-                    <strong>{shop.name}</strong>
+                    <strong>
+                      {shop.name}
+                      {shop.city && !/[·•]/.test(shop.name || '') ? (
+                        <span className="result-city"> • {shop.city}</span>
+                      ) : null}
+                    </strong>
                     <p>★ {shop.rating} · {shop.reviews || 0} отзывов</p>
                     <p>{shop.address}</p>
                     <p className={shop.status === 'Закрыто' ? 'is-closed' : ''}>

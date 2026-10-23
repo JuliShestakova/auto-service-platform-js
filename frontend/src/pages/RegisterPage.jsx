@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { CITIES, DEFAULT_CITY } from '../data/cities';
@@ -144,6 +144,7 @@ function RegisterPage({
   isModal = false,
   onClose,
   onSwitchToLogin,
+  initialRole = 'customer',
 }) {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -152,7 +153,7 @@ function RegisterPage({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
-  const [role, setRole] = useState('customer');
+  const [role, setRole] = useState(initialRole === 'executor' ? 'executor' : 'customer');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState(DEFAULT_CITY);
@@ -166,6 +167,10 @@ function RegisterPage({
   const [isLoading, setIsLoading] = useState(false);
 
   const isExecutor = role === 'executor';
+
+  useEffect(() => {
+    setRole(initialRole === 'executor' ? 'executor' : 'customer');
+  }, [initialRole]);
 
   const validationError = useMemo(() => {
     const trimmedName = name.trim();

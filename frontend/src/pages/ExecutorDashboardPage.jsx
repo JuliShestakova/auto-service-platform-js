@@ -39,11 +39,6 @@ function catalogServiceName(item) {
   return item?.name;
 }
 
-function catalogServicePrice(item) {
-  if (Array.isArray(item)) return item[1];
-  return item?.price;
-}
-
 function mergeCatalog(apiItems = [], profileServices = []) {
   const groups = SERVICE_GROUPS.map((group) => ({
     category: group.category,
@@ -835,15 +830,7 @@ export default function ExecutorDashboardPage() {
     setServicesSaving(true);
     setServicesError('');
     setServicesSaved(false);
-    const priceByName = new Map();
-    (profile?.services || []).forEach((item) => {
-      const name = catalogServiceName(item);
-      const price = catalogServicePrice(item);
-      if (name && price) priceByName.set(name, price);
-    });
-    const services = pickedServices.map((name) => (
-      priceByName.has(name) ? [name, priceByName.get(name)] : [name]
-    ));
+    const services = pickedServices.map((name) => [name]);
     try {
       const response = await authFetch('/api/executors/me', {
         method: 'PATCH',

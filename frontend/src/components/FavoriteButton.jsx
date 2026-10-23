@@ -1,3 +1,5 @@
+import { useAuth } from '../contexts/AuthContext';
+
 function HeartIcon({ filled = false }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -18,6 +20,11 @@ export default function FavoriteButton({
   className = '',
   label,
 }) {
+  const { user } = useAuth();
+  if (user?.role === 'executor' || user?.role === 'admin') {
+    return null;
+  }
+
   return (
     <button
       type="button"

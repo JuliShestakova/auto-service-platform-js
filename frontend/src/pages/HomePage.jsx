@@ -12,6 +12,10 @@ import {
   SERVICE_CATALOG,
 } from '../data/serviceCatalog';
 import { resolveBestService } from '../utils/fuzzyService';
+import { listServiceNames } from '../services/catalog';
+import { listExecutorReviews, listExecutors } from '../services/executors';
+import { createOrder, listOrders } from '../services/orders';
+import { canCustomerReview, createReview, deleteReview } from '../services/reviews';
 
 import bannerImage from '../assets/auto-service-banner.png';
 import logoImage from '../assets/logo-header.png';
@@ -135,12 +139,12 @@ function ServiceArrowIcon() {
 }
 
 const POPULAR_SERVICES = [
-  { name: 'Замена масла', image: serviceOil, price: 'от 1 000 ₽', Icon: ServiceOilIcon },
-  { name: 'Замена тормозных колодок', image: serviceBrakes, price: 'от 2 500 ₽', Icon: ServiceBrakeIcon },
-  { name: 'Компьютерная диагностика', image: serviceDiagnostics, price: 'от 1 500 ₽', Icon: ServiceLaptopIcon },
-  { name: 'Шиномонтаж', image: serviceTires, price: 'от 1 200 ₽', Icon: ServiceTireIcon },
-  { name: 'Ремонт двигателя', image: serviceEngine, price: 'от 5 000 ₽', Icon: ServiceEngineIcon },
-  { name: 'Заправка кондиционера', image: serviceAc, price: 'от 2 000 ₽', Icon: ServiceAcIcon },
+  { name: 'Замена масла', image: serviceOil, Icon: ServiceOilIcon },
+  { name: 'Замена тормозных колодок', image: serviceBrakes, Icon: ServiceBrakeIcon },
+  { name: 'Компьютерная диагностика', image: serviceDiagnostics, Icon: ServiceLaptopIcon },
+  { name: 'Шиномонтаж', image: serviceTires, Icon: ServiceTireIcon },
+  { name: 'Ремонт двигателя', image: serviceEngine, Icon: ServiceEngineIcon },
+  { name: 'Заправка кондиционера', image: serviceAc, Icon: ServiceAcIcon },
 ];
 
 
@@ -511,8 +515,8 @@ function Footer() {
               <PercentIcon />
             </span>
             <div>
-              <strong>Прозрачные цены</strong>
-              <span>Сравнивайте стоимость услуг</span>
+              <strong>Равные условия</strong>
+              <span>Автосервисы отмечают свои работы</span>
             </div>
           </div>
           <div>
@@ -645,14 +649,7 @@ function HomePage({
     let cancelled = false;
 
     const loadOrders = async () => {
-      const response = await authFetch('/api/orders');
-
-      if (!response.ok || cancelled) {
-        return;
-      }
-
-      const data = await response.json();
-
+      const data = await listOrders(authFetch);
       if (!cancelled) {
         setOrders(data.map(mapOrder));
       }
@@ -683,16 +680,7 @@ function HomePage({
         setServicesLoading(true);
         setServicesError('');
 
-        const response = await fetch(
-          `/api/executors?city=${encodeURIComponent(city)}`
-        );
-
-        if (!response.ok) {
-          throw new Error('Не удалось загрузить автосервисы');
-        }
-
-        const data = await response.json();
-
+        const data = await listExecutors({ city });
         setServices(data);
       } catch (error) {
         setServicesError(
@@ -711,14 +699,7 @@ function HomePage({
   useEffect(() => {
     const loadCatalog = async () => {
       try {
-        const response = await fetch('/api/services');
-        if (!response.ok) {
-          return;
-        }
-        const data = await response.json();
-        const names = data
-          .map((item) => item?.name)
-          .filter(Boolean);
+        const names = await listServiceNames();
         if (names.length) {
           setCatalogNames(names);
         }
@@ -741,13 +722,7 @@ function HomePage({
     const loadReviews = async () => {
       setModalReviewsLoading(true);
       try {
-        const response = await fetch(
-          `/api/executors/${selectedService.id}/reviews`
-        );
-        if (!response.ok) {
-          throw new Error('reviews');
-        }
-        const data = await response.json();
+        const data = await listExecutorReviews(selectedService.id);
         if (!cancelled) {
           setModalReviews(data);
         }
@@ -952,23 +927,16 @@ function HomePage({
       return;
     }
 
-    const response = await authFetch('/api/orders', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: bookingService,
-        description: '',
-        executor_id: selectedService.id,
-        visit_date: bookingDate,
-        visit_time: bookingTime,
-      }),
+    const { ok, data, error } = await createOrder(authFetch, {
+      title: bookingService,
+      description: '',
+      executor_id: selectedService.id,
+      visit_date: bookingDate,
+      visit_time: bookingTime,
     });
-    const data = await response.json().catch(() => ({}));
 
-    if (!response.ok) {
-      alert(readApiError(data, 'Не удалось сохранить запись'));
+    if (!ok) {
+      alert(error || 'Не удалось сохранить запись');
       return;
     }
 
@@ -990,17 +958,18 @@ function HomePage({
       setShowBookingAuth(true);
       return { error: 'Войдите, чтобы оставить отзыв' };
     }
+    if (!canCustomerReview(user)) {
+      return { error: 'Отзывы могут оставлять только клиенты' };
+    }
     if (!selectedService?.id) {
       return { error: 'Автосервис не выбран' };
     }
-    const response = await authFetch(`/api/executors/${selectedService.id}/reviews`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rating, text }),
+    const { ok, data, error } = await createReview(authFetch, selectedService.id, {
+      rating,
+      text,
     });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      return { error: readApiError(data, 'Не удалось отправить отзыв') };
+    if (!ok) {
+      return { error: error || 'Не удалось отправить отзыв' };
     }
     setModalReviews((current) => [data, ...current]);
     setSelectedService((current) => (
@@ -1013,8 +982,8 @@ function HomePage({
 
   const deleteShopReview = async (review) => {
     if (!review?.id) return;
-    const response = await authFetch(`/api/reviews/${review.id}`, { method: 'DELETE' });
-    if (!response.ok) return;
+    const { ok } = await deleteReview(authFetch, review.id);
+    if (!ok) return;
     setModalReviews((current) => current.filter((item) => item.id !== review.id));
     setSelectedService((current) => (
       current
@@ -1143,7 +1112,7 @@ function HomePage({
                 которому можно <span>доверять</span>
               </h1>
               <p>
-                Сравнивайте цены, читайте реальные отзывы
+                Сравнивайте рейтинг, читайте реальные отзывы
                 и записывайтесь онлайн. Обслуживайте автомобиль
                 без лишних хлопот.
               </p>
@@ -1185,8 +1154,8 @@ function HomePage({
                   <PercentIcon />
                 </span>
                 <div>
-                  <strong>Прозрачные цены</strong>
-                  <span>Сравнивайте стоимость услуг</span>
+                  <strong>Равные условия</strong>
+                  <span>Автосервисы отмечают свои работы</span>
                 </div>
               </div>
               <div>
@@ -1730,9 +1699,6 @@ function HomePage({
 
           <div className="work-card-grid">
             {POPULAR_SERVICES.map((item) => {
-              const livePrice = services
-                .flatMap((service) => service.services || [])
-                .find((row) => row?.[0] === item.name)?.[1];
               const Icon = item.Icon;
 
               return (
@@ -1752,7 +1718,7 @@ function HomePage({
                     </span>
                     <span className="work-card-text">
                       <strong>{item.name}</strong>
-                      <small>{livePrice || item.price}</small>
+                      <small>Подобрать сервис</small>
                     </span>
                     <span className="work-card-arrow" aria-hidden="true">
                       <ServiceArrowIcon />
@@ -1798,6 +1764,9 @@ function HomePage({
                       >
                         {service.name}
                       </button>
+                      {service.city && !/[·•]/.test(service.name || '') ? (
+                        <span className="result-city"> • {service.city}</span>
+                      ) : null}
                     </h3>
                     <button
                       type="button"
@@ -1846,7 +1815,7 @@ function HomePage({
             <button
               type="button"
               className="primary-button"
-              onClick={onRegister}
+              onClick={() => onRegister?.('executor')}
             >
               Разместить автосервис →
             </button>
@@ -1879,8 +1848,7 @@ function HomePage({
               </h2>
 
               <p className="services-subtitle">
-                Сравните рейтинг, стоимость,
-                расположение и часы работы.
+                Сравните рейтинг, расположение и часы работы.
               </p>
 
             </div>
@@ -2034,10 +2002,7 @@ function HomePage({
                       {matchedWorks.length > 0 && (
                         <p className="service-work-match">
                           {matchedWorks
-                            .map(
-                              ([name, price]) =>
-                                `${name} · ${price}`
-                            )
+                            .map(([name]) => name)
                             .join(', ')}
                         </p>
                       )}

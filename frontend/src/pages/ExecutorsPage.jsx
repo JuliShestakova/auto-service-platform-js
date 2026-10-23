@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { listExecutors } from '../services/executors';
 
 function ExecutorsPage() {
   const [executors, setExecutors] = useState([]);
@@ -9,15 +10,7 @@ function ExecutorsPage() {
   useEffect(() => {
     async function fetchExecutors() {
       try {
-        const response = await fetch('/api/executors');
-
-        if (!response.ok) {
-          throw new Error('Не удалось загрузить исполнителей');
-        }
-
-        const data = await response.json();
-
-        setExecutors(data);
+        setExecutors(await listExecutors());
       } catch (err) {
         setError(err.message);
       } finally {
@@ -63,10 +56,6 @@ function ExecutorsPage() {
               <Link to={`/executors/${executor.id}#reviews`}>
                 ⭐ {executor.rating} · {executor.reviews || 0} отзывов
               </Link>
-            </p>
-
-            <p>
-              Стоимость: {executor.price}
             </p>
 
             <p>

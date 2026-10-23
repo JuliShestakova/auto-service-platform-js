@@ -1,26 +1,49 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import {
   FAVORITES_EVENT,
   isFavoriteId,
   readFavoriteIds,
   toggleFavoriteId,
-} from '../utils/favorites';
+} from '../services/favorites';
+
+function ownerIdFromUser(user) {
+  if (user?.role === 'customer' && user?.id) {
+    return user.id;
+  }
+  return null;
+}
 
 export default function useFavorites() {
-  const [favoriteIds, setFavoriteIds] = useState(() => readFavoriteIds());
+  const { user } = useAuth();
+  const canFavorite = !user || user.role === 'customer';
+  const ownerId = ownerIdFromUser(user);
+  const [favoriteIds, setFavoriteIds] = useState(() => (
+    canFavorite ? readFavoriteIds(ownerId) : []
+  ));
 
   useEffect(() => {
+    if (!canFavorite) {
+      setFavoriteIds([]);
+      return undefined;
+    }
+
+    setFavoriteIds(readFavoriteIds(ownerId));
+
     const sync = (event) => {
-      if (Array.isArray(event?.detail)) {
-        setFavoriteIds(event.detail);
+      const detail = event?.detail;
+      if (detail && typeof detail === 'object' && Array.isArray(detail.ids)) {
+        if ((detail.ownerId || null) === (ownerId || null)) {
+          setFavoriteIds(detail.ids);
+        }
         return;
       }
-      setFavoriteIds(readFavoriteIds());
+      setFavoriteIds(readFavoriteIds(ownerId));
     };
 
     const onStorage = (event) => {
-      if (event.key === null || event.key === 'favorite_executor_ids') {
-        setFavoriteIds(readFavoriteIds());
+      if (event.key === null || String(event.key).startsWith('favorite_executor_ids')) {
+        setFavoriteIds(readFavoriteIds(ownerId));
       }
     };
 
@@ -30,17 +53,21 @@ export default function useFavorites() {
       window.removeEventListener(FAVORITES_EVENT, sync);
       window.removeEventListener('storage', onStorage);
     };
-  }, []);
+  }, [ownerId, canFavorite]);
 
   const toggleFavorite = (id) => {
-    setFavoriteIds(toggleFavoriteId(id));
+    if (!canFavorite) {
+      return;
+    }
+    setFavoriteIds(toggleFavoriteId(id, ownerId));
   };
 
-  const isFavorite = (id) => isFavoriteId(id, favoriteIds);
+  const isFavorite = (id) => canFavorite && isFavoriteId(id, favoriteIds);
 
   return {
     favoriteIds,
     toggleFavorite,
     isFavorite,
+    canFavorite,
   };
 }

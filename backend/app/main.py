@@ -1246,10 +1246,10 @@ async def create_executor_review(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    if current_user.role not in ("customer", "executor"):
+    if current_user.role != "customer":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Отзыв могут оставлять только зарегистрированные пользователи",
+            detail="Отзывы могут оставлять только клиенты",
         )
 
     result = await db.execute(

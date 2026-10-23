@@ -12,6 +12,9 @@ import FavoriteButton from '../components/FavoriteButton';
 import ServiceCardModal from '../components/ServiceCardModal';
 import SiteHeader from '../components/SiteHeader';
 import useFavorites from '../hooks/useFavorites';
+import { getExecutor, listExecutorReviews, listExecutors } from '../services/executors';
+import { createOrder, listOrders, updateOrder } from '../services/orders';
+import { createReview, deleteReview, listMyReviews } from '../services/reviews';
 
 import shopImage1 from '../assets/shops/shop-1.jpg';
 import shopImage2 from '../assets/shops/shop-2.jpg';
@@ -267,13 +270,9 @@ function CustomerDashboardPage({
     const loadOrders = async () => {
       setOrdersLoading(true);
       try {
-        const response = await authFetch('/api/orders');
-        if (!response.ok) {
-          return;
-        }
-        const data = await response.json();
+        const data = await listOrders(authFetch);
         if (!cancelled) {
-          setOrders(Array.isArray(data) ? data : []);
+          setOrders(data);
         }
       } catch {
         if (!cancelled) {
@@ -304,11 +303,7 @@ function CustomerDashboardPage({
       }
 
       try {
-        const response = await fetch('/api/executors');
-        if (!response.ok) {
-          return;
-        }
-        const shops = await response.json();
+        const shops = await listExecutors();
         if (cancelled || !Array.isArray(shops)) {
           return;
         }
@@ -361,12 +356,10 @@ function CustomerDashboardPage({
     }
 
     try {
-      const response = await authFetch('/api/reviews/me');
-      if (!response.ok) {
+      const mine = await listMyReviews(authFetch);
+      if (!mine) {
         return null;
       }
-      const data = await response.json();
-      const mine = Array.isArray(data) ? data : [];
       setMyReviews(mine);
       setReviewedExecutorIds(
         [...new Set(mine.map((item) => Number(item.executor_id)).filter(Boolean))],
@@ -407,11 +400,7 @@ function CustomerDashboardPage({
       try {
         const results = await Promise.all(
           executorIds.map(async (executorId) => {
-            const response = await fetch(`/api/executors/${executorId}/reviews`);
-            if (!response.ok) {
-              return [];
-            }
-            const reviews = await response.json();
+            const reviews = await listExecutorReviews(executorId);
             return Array.isArray(reviews)
               ? reviews.filter((item) => Number(item.user_id) === Number(user.id))
               : [];
@@ -481,28 +470,13 @@ function CustomerDashboardPage({
     setReviewError('');
     setReviewSaving(true);
     try {
-      const response = await authFetch(
-        `/api/executors/${reviewTarget.id}/reviews`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            rating: Number(reviewRating),
-            text: reviewText.trim(),
-          }),
-        },
-      );
-      const data = await response.json().catch(() => ({}));
+      const { ok, data, error } = await createReview(authFetch, reviewTarget.id, {
+        rating: Number(reviewRating),
+        text: reviewText.trim(),
+      });
 
-      if (!response.ok) {
-        const detail = data?.detail;
-        setReviewError(
-          typeof detail === 'string'
-            ? detail
-            : Array.isArray(detail)
-              ? detail.map((item) => item?.msg || String(item)).join('. ')
-              : 'Не удалось сохранить отзыв',
-        );
+      if (!ok) {
+        setReviewError(error || 'Не удалось сохранить отзыв');
         return;
       }
 
@@ -588,8 +562,8 @@ function CustomerDashboardPage({
     if (!review?.id) return;
     setDeletingReviewId(review.id);
     try {
-      const response = await authFetch(`/api/reviews/${review.id}`, { method: 'DELETE' });
-      if (!response.ok) return;
+      const { ok } = await deleteReview(authFetch, review.id);
+      if (!ok) return;
       removeLocalReview(review);
     } finally {
       setDeletingReviewId(null);
@@ -600,24 +574,12 @@ function CustomerDashboardPage({
     if (!detailsExecutor?.id) {
       return { error: 'Автосервис не выбран' };
     }
-    const response = await authFetch(
-      `/api/executors/${detailsExecutor.id}/reviews`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rating: Number(rating), text: (text || '').trim() }),
-      },
-    );
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      const detail = data?.detail;
-      return {
-        error: typeof detail === 'string'
-          ? detail
-          : Array.isArray(detail)
-            ? detail.map((item) => item?.msg || String(item)).join('. ')
-            : 'Не удалось сохранить отзыв',
-      };
+    const { ok, data, error } = await createReview(authFetch, detailsExecutor.id, {
+      rating: Number(rating),
+      text: (text || '').trim(),
+    });
+    if (!ok) {
+      return { error: error || 'Не удалось сохранить отзыв' };
     }
     rememberSavedReview(data, detailsExecutor.name);
     return { ok: true };
@@ -676,23 +638,17 @@ function CustomerDashboardPage({
     setCancelError('');
     setCancelingId(cancelTarget.id);
     try {
-      const response = await authFetch(`/api/orders/${cancelTarget.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'Отменён', cancel_reason: reason }),
+      const { ok, data, error } = await updateOrder(authFetch, cancelTarget.id, {
+        status: 'Отменён',
+        cancel_reason: reason,
       });
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        setCancelError(
-          typeof data?.detail === 'string'
-            ? data.detail
-            : 'Не удалось отменить запись',
-        );
+      if (!ok) {
+        setCancelError(error || 'Не удалось отменить запись');
         return;
       }
 
-      const updated = await response.json();
+      const updated = data;
       setOrders((current) => current.map((item) => (
         item.id === updated.id ? updated : item
       )));
@@ -734,11 +690,10 @@ function CustomerDashboardPage({
     setDetailsFocus(focus);
 
     try {
-      const response = await fetch(`/api/executors/${executorId}`);
-      if (!response.ok) {
+      const executor = await getExecutor(executorId);
+      if (!executor) {
         throw new Error('not found');
       }
-      const executor = await response.json();
       const serviceRows = (executor.services || [])
         .map((item) => (Array.isArray(item) ? item[0] : item?.name))
         .filter(Boolean);
@@ -752,14 +707,7 @@ function CustomerDashboardPage({
       setBookingDate(orderOrShop?.visit_date || '');
       setBookingTime(orderOrShop?.visit_time || '');
 
-      const reviewsResponse = await fetch(
-        `/api/executors/${executorId}/reviews`,
-      );
-      if (reviewsResponse.ok) {
-        setDetailsReviews(await reviewsResponse.json());
-      } else {
-        setDetailsReviews([]);
-      }
+      setDetailsReviews(await listExecutorReviews(executorId));
     } catch {
       setDetailsExecutor(null);
       setDetailsReviews([]);
@@ -783,25 +731,16 @@ function CustomerDashboardPage({
 
     setBookingSaving(true);
     try {
-      const response = await authFetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: bookingService,
-          description: '',
-          executor_id: detailsExecutor.id,
-          visit_date: bookingDate,
-          visit_time: bookingTime,
-        }),
+      const { ok, data, error } = await createOrder(authFetch, {
+        title: bookingService,
+        description: '',
+        executor_id: detailsExecutor.id,
+        visit_date: bookingDate,
+        visit_time: bookingTime,
       });
-      const data = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
-        setBookingError(
-          typeof data?.detail === 'string'
-            ? data.detail
-            : 'Не удалось сохранить запись',
-        );
+      if (!ok) {
+        setBookingError(error || 'Не удалось сохранить запись');
         return;
       }
 

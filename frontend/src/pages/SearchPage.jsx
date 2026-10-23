@@ -15,6 +15,10 @@ import ServiceSuggest from '../components/ServiceSuggest';
 import SiteHeader from '../components/SiteHeader';
 import { useLocation } from '../contexts/LocationContext';
 import useFavorites from '../hooks/useFavorites';
+import { listServiceNames } from '../services/catalog';
+import { listExecutorReviews, listExecutors } from '../services/executors';
+import { createOrder } from '../services/orders';
+import { canCustomerReview, createReview, deleteReview } from '../services/reviews';
 import shopImage1 from '../assets/shops/shop-1.jpg';
 import shopImage2 from '../assets/shops/shop-2.jpg';
 import shopImage3 from '../assets/shops/shop-3.jpg';
@@ -146,27 +150,6 @@ function shopsWord(count) {
   return 'автосервисов';
 }
 
-function priceNumber(value) {
-  const digits = String(value || '').replace(/[^\d]/g, '');
-  return digits ? Number(digits) : 0;
-}
-
-function lowestPrice(executor) {
-  const prices = (executor.services || [])
-    .map((item) => priceNumber(item?.[1]))
-    .filter((price) => price > 0);
-
-  return prices.length ? Math.min(...prices) : 0;
-}
-
-function formatPrice(value) {
-  if (!value) {
-    return 'по запросу';
-  }
-
-  return `от ${value.toLocaleString('ru-RU')} ₽`;
-}
-
 const BOOKING_TIMES = [
   '09:00', '10:00', '11:00', '12:00',
   '13:00', '14:00', '15:00', '16:00',
@@ -201,7 +184,6 @@ function SearchPage({ onLogin, onRegister }) {
   const [error, setError] = useState('');
   const [sort, setSort] = useState('rating');
   const [minRating, setMinRating] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(10000);
   const [openOnly, setOpenOnly] = useState(false);
   const [checkedWorks, setCheckedWorks] = useState([]);
   const [bookingExecutor, setBookingExecutor] = useState(null);
@@ -246,15 +228,7 @@ function SearchPage({ onLogin, onRegister }) {
     const loadExecutors = async () => {
       try {
         setError('');
-        const response = await fetch(
-          `/api/executors?city=${encodeURIComponent(city)}`
-        );
-
-        if (!response.ok) {
-          throw new Error('Не удалось загрузить автосервисы');
-        }
-
-        setExecutors(await response.json());
+        setExecutors(await listExecutors({ city }));
       } catch (loadError) {
         setError(
           loadError instanceof Error
@@ -312,10 +286,7 @@ function SearchPage({ onLogin, onRegister }) {
   useEffect(() => {
     const loadCatalog = async () => {
       try {
-        const response = await fetch('/api/services');
-        if (!response.ok) return;
-        const data = await response.json();
-        const names = data.map((item) => item?.name).filter(Boolean);
+        const names = await listServiceNames();
         if (names.length) setCatalogNames(names);
       } catch {
         // локальный каталог
@@ -347,11 +318,7 @@ function SearchPage({ onLogin, onRegister }) {
     let cancelled = false;
     const loadReviews = async () => {
       try {
-        const response = await fetch(
-          `/api/executors/${bookingExecutor.id}/reviews`
-        );
-        if (!response.ok) return;
-        const data = await response.json();
+        const data = await listExecutorReviews(bookingExecutor.id);
         if (!cancelled) setBookingReviews(data);
       } catch {
         if (!cancelled) setBookingReviews([]);
@@ -437,11 +404,6 @@ function SearchPage({ onLogin, onRegister }) {
           return false;
         }
 
-        const price = lowestPrice(executor);
-        if (price && price > maxPrice) {
-          return false;
-        }
-
         if (selectedWorks.size === 0) {
           return true;
         }
@@ -460,10 +422,6 @@ function SearchPage({ onLogin, onRegister }) {
         });
       })
       .sort((left, right) => {
-        if (sort === 'price') {
-          return lowestPrice(left) - lowestPrice(right);
-        }
-
         if (sort === 'name') {
           return left.name.localeCompare(right.name, 'ru');
         }
@@ -474,7 +432,7 @@ function SearchPage({ onLogin, onRegister }) {
 
         return Number(right.rating) - Number(left.rating);
       });
-  }, [executors, checkedWorks, openOnly, minRating, maxPrice, sort, nameDraft, location, distanceTo]);
+  }, [executors, checkedWorks, openOnly, minRating, sort, nameDraft, location, distanceTo]);
 
   useEffect(() => {
     if (!work) return;
@@ -531,25 +489,16 @@ function SearchPage({ onLogin, onRegister }) {
     setBookingSaving(true);
 
     try {
-      const response = await authFetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: bookingService,
-          description: '',
-          executor_id: bookingExecutor.id,
-          visit_date: bookingDate,
-          visit_time: bookingTime,
-        }),
+      const { ok, error } = await createOrder(authFetch, {
+        title: bookingService,
+        description: '',
+        executor_id: bookingExecutor.id,
+        visit_date: bookingDate,
+        visit_time: bookingTime,
       });
-      const data = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
-        setBookingError(
-          readApiError(data, 'Не удалось сохранить запись')
-        );
+      if (!ok) {
+        setBookingError(error || 'Не удалось сохранить запись');
         return;
       }
 
@@ -566,17 +515,18 @@ function SearchPage({ onLogin, onRegister }) {
       onLogin();
       return { error: 'Войдите, чтобы оставить отзыв' };
     }
+    if (!canCustomerReview(user)) {
+      return { error: 'Отзывы могут оставлять только клиенты' };
+    }
     if (!bookingExecutor?.id) {
       return { error: 'Автосервис не выбран' };
     }
-    const response = await authFetch(`/api/executors/${bookingExecutor.id}/reviews`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rating, text }),
+    const { ok, data, error } = await createReview(authFetch, bookingExecutor.id, {
+      rating,
+      text,
     });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      return { error: readApiError(data, 'Не удалось отправить отзыв') };
+    if (!ok) {
+      return { error: error || 'Не удалось отправить отзыв' };
     }
     setBookingReviews((current) => [data, ...current]);
     setBookingExecutor((current) => (
@@ -589,8 +539,8 @@ function SearchPage({ onLogin, onRegister }) {
 
   const deleteShopReview = async (review) => {
     if (!review?.id) return;
-    const response = await authFetch(`/api/reviews/${review.id}`, { method: 'DELETE' });
-    if (!response.ok) return;
+    const { ok } = await deleteReview(authFetch, review.id);
+    if (!ok) return;
     setBookingReviews((current) => current.filter((item) => item.id !== review.id));
     setBookingExecutor((current) => (
       current
@@ -615,7 +565,6 @@ function SearchPage({ onLogin, onRegister }) {
   const resetFilters = () => {
     setSort('rating');
     setMinRating(0);
-    setMaxPrice(10000);
     setOpenOnly(false);
     setCheckedWorks([]);
     setNameDraft('');
@@ -715,32 +664,10 @@ function SearchPage({ onLogin, onRegister }) {
                 onChange={(event) => setSort(event.target.value)}
               >
                 <option value="rating">По рейтингу</option>
-                <option value="price">По цене</option>
                 <option value="name">По названию</option>
                 <option value="distance" disabled={!location}>По расстоянию</option>
               </select>
             </label>
-
-            <div className="search-filter-block">
-              <span className="search-filter-label">Цена услуги</span>
-              <div className="search-price-scale">
-                <span>0 ₽</span>
-                <span>10 000 ₽</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="10000"
-                step="100"
-                value={maxPrice}
-                onChange={(event) =>
-                  setMaxPrice(Number(event.target.value))
-                }
-              />
-              <small className="search-price-value">
-                до {maxPrice.toLocaleString('ru-RU')} ₽
-              </small>
-            </div>
 
             <fieldset className="search-filter-block">
               <legend className="search-filter-label">Рейтинг</legend>
@@ -852,7 +779,6 @@ function SearchPage({ onLogin, onRegister }) {
               const cover = SHOP_IMAGES[
                 Math.abs(Number(executor.id) || 0) % SHOP_IMAGES.length
               ];
-              const price = lowestPrice(executor);
               const tags = (executor.services || []).slice(0, 4);
               const shopCity = executor.city || city;
               const nameHasCity = /[·•]/.test(executor.name || '');
@@ -927,9 +853,6 @@ function SearchPage({ onLogin, onRegister }) {
                   </div>
 
                   <div className="result-actions">
-                    <strong className="result-price-tag">
-                      {formatPrice(price)}
-                    </strong>
                     <button
                       type="button"
                       className="primary-button"
