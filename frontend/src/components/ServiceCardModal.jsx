@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import ServiceSuggest from './ServiceSuggest';
 import ReviewsModal from './ReviewsModal';
 import { useLocation } from '../contexts/LocationContext';
+import { canBookOnline } from '../services/orders';
 
 const BOOKING_TIMES = [
   '09:00', '10:00', '11:00', '12:00',
@@ -131,28 +132,6 @@ function serviceRows(executor) {
     .filter(Boolean);
 }
 
-function reviewInitials(name) {
-  return String(name || 'К')
-    .split(/\s+/)
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
-
-function formatReviewDate(value) {
-  if (!value) return '';
-  try {
-    return new Date(value).toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  } catch {
-    return '';
-  }
-}
-
 function StarsRow({ rating }) {
   const value = Math.round(Number(rating) || 0);
   return (
@@ -205,6 +184,7 @@ export default function ServiceCardModal({
   const rows = serviceRows(executor);
   const reviewCount = reviews.length || Number(executor?.reviews) || 0;
   const ownReview = reviews.find((item) => Number(item.user_id) === Number(user?.id));
+  const canBook = canBookOnline(user);
   const canWriteReview = Boolean(
     user?.role === 'customer' && !ownReview
   );
@@ -300,7 +280,9 @@ export default function ServiceCardModal({
     >
       <div
         id="service-details"
-        className="booking-overlay-panel service-modal-panel"
+        className={`booking-overlay-panel service-modal-panel${
+          canBook ? '' : ' service-modal-panel-readonly'
+        }`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="service-modal-title"
@@ -317,7 +299,7 @@ export default function ServiceCardModal({
 
         <div className={`service-details-card scm-card${
           focus === 'reviews' ? ' focus-reviews' : ''
-        }`}
+        }${canBook ? '' : ' scm-card-readonly'}`}
         >
           <div className="service-details-main">
             <div className="service-details-top scm-top">
@@ -389,34 +371,52 @@ export default function ServiceCardModal({
               <div className="price-section-header">
                 <div>
                   <p className="section-label">Услуги</p>
-                  <h3>Выберите необходимую работу</h3>
+                  <h3>
+                    {canBook
+                      ? 'Выберите необходимую работу'
+                      : 'Какие работы выполняет'}
+                  </h3>
                 </div>
                 {rows.length > 4 ? (
                   <span className="scm-price-hint">
-                    {rows.length} услуг · прокрутите список
+                    {canBook
+                      ? `${rows.length} услуг · прокрутите список`
+                      : `${rows.length} услуг`}
                   </span>
                 ) : null}
               </div>
               <div className="price-list scm-price-list">
                 {rows.map((name) => (
-                  <button
-                    type="button"
-                    key={name}
-                    className={
-                      bookingService === name
-                        ? 'price-item scm-price-item selected'
-                        : 'price-item scm-price-item'
-                    }
-                    onClick={() => onSelectService?.(name)}
-                  >
-                    <span className="scm-price-main">
-                      <span className="scm-price-icon"><ServiceGlyph name={name} /></span>
-                      <span>{name}</span>
-                    </span>
-                    <span className="scm-price-chevron" aria-hidden="true">
-                      <ChevronIcon />
-                    </span>
-                  </button>
+                  canBook ? (
+                    <button
+                      type="button"
+                      key={name}
+                      className={
+                        bookingService === name
+                          ? 'price-item scm-price-item selected'
+                          : 'price-item scm-price-item'
+                      }
+                      onClick={() => onSelectService?.(name)}
+                    >
+                      <span className="scm-price-main">
+                        <span className="scm-price-icon"><ServiceGlyph name={name} /></span>
+                        <span>{name}</span>
+                      </span>
+                      <span className="scm-price-chevron" aria-hidden="true">
+                        <ChevronIcon />
+                      </span>
+                    </button>
+                  ) : (
+                    <div
+                      key={name}
+                      className="price-item scm-price-item is-static"
+                    >
+                      <span className="scm-price-main">
+                        <span className="scm-price-icon"><ServiceGlyph name={name} /></span>
+                        <span>{name}</span>
+                      </span>
+                    </div>
+                  )
                 ))}
               </div>
             </div>
@@ -466,6 +466,7 @@ export default function ServiceCardModal({
             </section>
           </div>
 
+          {canBook ? (
           <aside className="booking-card">
             {bookingDone ? (
               <>
@@ -597,6 +598,7 @@ export default function ServiceCardModal({
               </li>
             </ul>
           </aside>
+          ) : null}
         </div>
       </div>
     </div>

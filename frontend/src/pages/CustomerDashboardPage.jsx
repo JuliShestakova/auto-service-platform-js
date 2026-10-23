@@ -185,7 +185,6 @@ function CustomerDashboardPage({
   const [detailsExecutor, setDetailsExecutor] = useState(null);
   const [detailsReviews, setDetailsReviews] = useState([]);
   const [detailsFocus, setDetailsFocus] = useState('booking');
-  const [detailsLoading, setDetailsLoading] = useState(false);
   const [bookingService, setBookingService] = useState('');
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
@@ -684,7 +683,6 @@ function CustomerDashboardPage({
       return;
     }
 
-    setDetailsLoading(true);
     setBookingError('');
     setBookingDone(false);
     setDetailsFocus(focus);
@@ -711,8 +709,6 @@ function CustomerDashboardPage({
     } catch {
       setDetailsExecutor(null);
       setDetailsReviews([]);
-    } finally {
-      setDetailsLoading(false);
     }
   };
 

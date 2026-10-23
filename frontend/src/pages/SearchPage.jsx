@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCity } from '../contexts/CityContext';
 import { DEFAULT_CITY } from '../data/cities';
@@ -17,7 +17,7 @@ import { useLocation } from '../contexts/LocationContext';
 import useFavorites from '../hooks/useFavorites';
 import { listServiceNames } from '../services/catalog';
 import { listExecutorReviews, listExecutors } from '../services/executors';
-import { createOrder } from '../services/orders';
+import { canBookOnline, createOrder } from '../services/orders';
 import { canCustomerReview, createReview, deleteReview } from '../services/reviews';
 import shopImage1 from '../assets/shops/shop-1.jpg';
 import shopImage2 from '../assets/shops/shop-2.jpg';
@@ -150,12 +150,6 @@ function shopsWord(count) {
   return 'автосервисов';
 }
 
-const BOOKING_TIMES = [
-  '09:00', '10:00', '11:00', '12:00',
-  '13:00', '14:00', '15:00', '16:00',
-  '17:00', '18:00', '19:00',
-];
-
 function serviceRows(executor) {
   return (executor?.services || [])
     .map((item) => (
@@ -164,14 +158,6 @@ function serviceRows(executor) {
         : [item?.name, item?.price]
     ))
     .filter((item) => item[0]);
-}
-
-function readApiError(data, fallback) {
-  if (typeof data?.detail === 'string') {
-    return data.detail;
-  }
-
-  return fallback;
 }
 
 function SearchPage({ onLogin, onRegister }) {
@@ -447,18 +433,6 @@ function SearchPage({ onLogin, onRegister }) {
   }, [work, filterGroups]);
 
 
-  const updateWork = (nextWork) => {
-    const next = new URLSearchParams(params);
-    if (nextWork) {
-      next.set('work', nextWork);
-    } else {
-      next.delete('work');
-    }
-    next.set('city', city);
-    setParams(next);
-    setCheckedWorks(nextWork ? [nextWork] : []);
-  };
-
   const toggleWork = (name) => {
     setCheckedWorks((current) => (
       current.includes(name)
@@ -476,7 +450,7 @@ function SearchPage({ onLogin, onRegister }) {
       return;
     }
 
-    if (user.role !== 'customer') {
+    if (!canBookOnline(user)) {
       setBookingError('Запись оформляется из аккаунта клиента.');
       return;
     }
@@ -858,7 +832,7 @@ function SearchPage({ onLogin, onRegister }) {
                       className="primary-button"
                       onClick={() => openBooking(executor)}
                     >
-                      Записаться
+                      {canBookOnline(user) ? 'Записаться' : 'Подробнее'}
                     </button>
                   </div>
                 </article>

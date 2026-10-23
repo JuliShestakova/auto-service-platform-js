@@ -16,7 +16,7 @@ import SiteHeader from '../components/SiteHeader';
 import useFavorites from '../hooks/useFavorites';
 import { shopCoords } from '../utils/geo';
 import { listExecutorReviews, listExecutors } from '../services/executors';
-import { createOrder } from '../services/orders';
+import { canBookOnline, createOrder } from '../services/orders';
 import { canCustomerReview, createReview, deleteReview } from '../services/reviews';
 import shopImage1 from '../assets/shops/shop-1.jpg';
 import shopImage2 from '../assets/shops/shop-2.jpg';
@@ -219,6 +219,10 @@ function MapPage({ onLogin, onRegister }) {
     event.preventDefault();
     if (!user) {
       onLogin?.();
+      return;
+    }
+    if (!canBookOnline(user)) {
+      setBookingError('Запись оформляется из аккаунта клиента.');
       return;
     }
     if (!bookingService || !bookingDate || !bookingTime) {

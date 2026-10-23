@@ -14,7 +14,7 @@ import {
 import { resolveBestService } from '../utils/fuzzyService';
 import { listServiceNames } from '../services/catalog';
 import { listExecutorReviews, listExecutors } from '../services/executors';
-import { createOrder, listOrders } from '../services/orders';
+import { canBookOnline, createOrder } from '../services/orders';
 import { canCustomerReview, createReview, deleteReview } from '../services/reviews';
 
 import bannerImage from '../assets/auto-service-banner.png';
@@ -170,48 +170,6 @@ function getMatchedWorks(service, query) {
   );
 }
 
-function orderStatusType(status) {
-  if (status === 'В работе') {
-    return 'progress';
-  }
-
-  if (status === 'Запланирован') {
-    return 'planned';
-  }
-
-  if (status === 'Ожидает подтверждения') {
-    return 'search';
-  }
-
-  if (status === 'Завершён') {
-    return 'done';
-  }
-
-  return 'search';
-}
-
-function mapOrder(order) {
-  return {
-    id: order.id,
-    title: order.title,
-    status: order.status,
-    statusType: orderStatusType(order.status),
-    car: order.car_label,
-    executorName: order.executor_name,
-    executorRating: order.executor_rating,
-    executorId: order.executor_id,
-    visitDate: order.visit_date,
-    visitTime: order.visit_time,
-  };
-}
-
-function readApiError(data, fallback) {
-  if (typeof data?.detail === 'string') {
-    return data.detail;
-  }
-
-  return fallback;
-}
 
 function SearchIcon() {
   return (
@@ -314,51 +272,6 @@ function CalendarIcon() {
       <path d="M8 2v4" />
       <path d="M3 10h18" />
       <circle cx="12" cy="15" r="1.5" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-
-function ClipboardIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <rect
-        x="5"
-        y="4"
-        width="14"
-        height="17"
-        rx="2"
-      />
-
-      <path d="M9 4.5V3h6v1.5" />
-      <path d="M9 9h6" />
-      <path d="M9 13h6" />
-    </svg>
-  );
-}
-
-
-function ShieldIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M12 3 20 6v5c0 5.2-3.3 8.6-8 10-4.7-1.4-8-4.8-8-10V6l8-3Z" />
-      <path d="m9 12 2 2 4-4" />
     </svg>
   );
 }
@@ -548,16 +461,12 @@ function Footer() {
 ===================================================== */
 
 function HomePage({
-  section = 'overview',
   onLogin,
   onRegister,
 }) {
   const {
     user,
-    logout,
     authFetch,
-    refreshCars,
-    updateProfile,
   } = useAuth();
   const { city } = useCity();
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -592,44 +501,6 @@ function HomePage({
   const [showBookingAuth, setShowBookingAuth] =
     useState(false);
 
-  const [orders, setOrders] = useState([]);
-  const [showCarForm, setShowCarForm] = useState(false);
-  const [carDraft, setCarDraft] = useState({
-    brand: '',
-    model: '',
-    year: '',
-    mileage: '',
-    vin: '',
-  });
-  const [cabinetError, setCabinetError] = useState('');
-  const [settingsMode, setSettingsMode] = useState('');
-  const [settingsName, setSettingsName] = useState('');
-  const [settingsEmail, setSettingsEmail] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-
-
-  const customerCars = user?.cars || [];
-
-  const isOverview = section === 'overview';
-  const isOrders = section === 'orders';
-  const isRequests = section === 'requests';
-  const isGarage = section === 'garage';
-  const isSettings = section === 'settings';
-
-  const requests = orders
-    .filter((order) => order.executorName)
-    .map((order) => ({
-      id: order.id,
-      service: order.executorName,
-      rating: order.executorRating ?? '—',
-      serviceName: order.title,
-      price: order.visitDate
-        ? `${order.visitDate}${order.visitTime ? `, ${order.visitTime}` : ''}`
-        : 'Дата не выбрана',
-      executorId: order.executorId,
-    }));
-
   useEffect(() => {
     const onScroll = () => {
       setHeaderScrolled(window.scrollY > 24);
@@ -639,35 +510,6 @@ function HomePage({
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
-
-  useEffect(() => {
-    if (!user || user.role !== 'customer') {
-      setOrders([]);
-      return undefined;
-    }
-
-    let cancelled = false;
-
-    const loadOrders = async () => {
-      const data = await listOrders(authFetch);
-      if (!cancelled) {
-        setOrders(data.map(mapOrder));
-      }
-    };
-
-    loadOrders();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user, authFetch]);
-
-  const handleLogout = async () => {
-    navigate('/', { replace: true });
-    if (typeof logout === 'function') {
-      await logout();
-    }
-  };
 
 
   /* =====================================================
@@ -808,10 +650,6 @@ function HomePage({
      ПРОКРУТКА К СЕРВИСАМ
   ===================================================== */
 
-  const scrollToServices = () => {
-    navigate(`/search?city=${encodeURIComponent(city)}`);
-  };
-
   const preferredWorks = [
     ...POPULAR_SERVICES.map((item) => item.name),
     ...SERVICE_ALIASES,
@@ -919,6 +757,10 @@ function HomePage({
       return;
     }
 
+    if (!canBookOnline(user)) {
+      return;
+    }
+
     if (
       !bookingService ||
       !bookingDate ||
@@ -927,7 +769,7 @@ function HomePage({
       return;
     }
 
-    const { ok, data, error } = await createOrder(authFetch, {
+    const { ok, error } = await createOrder(authFetch, {
       title: bookingService,
       description: '',
       executor_id: selectedService.id,
@@ -940,7 +782,6 @@ function HomePage({
       return;
     }
 
-    setOrders((current) => [mapOrder(data), ...current]);
     setBookingService('');
     setBookingDate('');
     setBookingTime('');
@@ -992,91 +833,8 @@ function HomePage({
     ));
   };
 
-  const saveCar = async (event) => {
-    event.preventDefault();
-    setCabinetError('');
-
-    const response = await authFetch('/api/cars', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        brand: carDraft.brand.trim(),
-        model: carDraft.model.trim(),
-        year: carDraft.year ? Number(carDraft.year) : null,
-        mileage: carDraft.mileage
-          ? Number(carDraft.mileage)
-          : null,
-        vin: carDraft.vin.trim() || null,
-      }),
-    });
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      setCabinetError(
-        readApiError(data, 'Не удалось сохранить автомобиль')
-      );
-      return;
-    }
-
-    await refreshCars();
-    setShowCarForm(false);
-    setCarDraft({
-      brand: '',
-      model: '',
-      year: '',
-      mileage: '',
-      vin: '',
-    });
-  };
-
-  const removeCar = async (carId) => {
-    const response = await authFetch(`/api/cars/${carId}`, {
-      method: 'DELETE',
-    });
-
-    if (response.ok) {
-      await refreshCars();
-    }
-  };
-
-  const saveSettings = async (event) => {
-    event.preventDefault();
-    setCabinetError('');
-
-    const payload = {};
-
-    if (settingsMode === 'name') {
-      payload.name = settingsName.trim();
-    }
-
-    if (settingsMode === 'email') {
-      payload.email = settingsEmail.trim();
-    }
-
-    if (settingsMode === 'password') {
-      payload.current_password = currentPassword;
-      payload.new_password = newPassword;
-    }
-
-    const result = await updateProfile(payload);
-
-    if (!result?.success) {
-      setCabinetError(
-        result?.error || 'Не удалось сохранить данные'
-      );
-      return;
-    }
-
-    setSettingsMode('');
-    setCurrentPassword('');
-    setNewPassword('');
-  };
-
-
   return (
-    <div className={`home-page${isOverview ? ' home-overview' : ''}`}>
+    <div className="home-page home-overview">
 
       <SiteHeader
         activeNav="home"
@@ -1096,7 +854,6 @@ function HomePage({
             БАННЕР
         =================================================== */}
 
-        {isOverview && (
         <section className="home-hero">
           <img
             className="home-hero-banner"
@@ -1179,511 +936,7 @@ function HomePage({
             </div>
           </div>
         </section>
-        )}
 
-
-        {/* ===================================================
-            РАЗДЕЛЫ КАБИНЕТА
-            Баннер выше остаётся на всех страницах.
-        =================================================== */}
-
-        {isOrders && (
-          <section className="customer-section customer-section-page">
-            <div className="services-header">
-              <div>
-                <p className="section-label">МОИ ЗАКАЗЫ</p>
-                <h2>Все заказы</h2>
-                <p className="services-subtitle">
-                  Здесь отображаются ваши обращения в автосервисы.
-                </p>
-              </div>
-
-              <Link
-                to="/customer/orders/new"
-                className="primary-button"
-                style={{
-                  textDecoration: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                }}
-              >
-                Создать заказ →
-              </Link>
-            </div>
-
-            {orders.length > 0 ? (
-              <div className="customer-orders-list">
-                {orders.map((order) => (
-                  <article
-                    className="order-card"
-                    key={order.id}
-                  >
-                    <div className="order-number">
-                      Заказ #{order.id}
-                    </div>
-
-                    <div className="order-content">
-                      <div>
-                        <h3>{order.title}</h3>
-                        <p>{order.car}</p>
-                      </div>
-
-                      <span
-                        className={`order-status ${
-                          order.statusType || 'search'
-                        }`}
-                      >
-                        {order.status}
-                      </span>
-
-                      <button
-                        type="button"
-                        className="order-link"
-                      >
-                        Подробнее →
-                      </button>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <div className="customer-empty-card">
-                <div className="customer-car-icon">
-                  <ClipboardIcon />
-                </div>
-
-                <div>
-                  <h3>Заказов пока нет</h3>
-                  <p>
-                    Создайте первый заказ, чтобы найти автосервис.
-                  </p>
-                </div>
-              </div>
-            )}
-          </section>
-        )}
-
-        {isRequests && (
-          <section className="customer-section customer-section-page">
-            <div className="services-header">
-              <div>
-                <p className="section-label">ЗАЯВКИ</p>
-                <h2>Предложения автосервисов</h2>
-                <p className="services-subtitle">
-                  Автосервисы откликнулись на ваши заказы.
-                </p>
-              </div>
-            </div>
-
-            {requests.length > 0 ? (
-              <div className="customer-requests-list">
-                {requests.map((request) => (
-                  <article
-                    className="request-card"
-                    key={request.id}
-                  >
-                    <div className="request-service-icon">
-                      <CarIcon />
-                    </div>
-
-                    <div className="request-content">
-                      <div className="request-title-row">
-                        <h3>{request.service}</h3>
-                        <span className="request-rating">
-                          ★ {request.rating}
-                        </span>
-                      </div>
-
-                      <p>{request.serviceName}</p>
-
-                      <span className="request-price-label">
-                        Стоимость
-                      </span>
-
-                      <strong className="request-price">
-                        {request.price}
-                      </strong>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="primary-button"
-                      onClick={() =>
-                        navigate(`/executors/${request.executorId}`)
-                      }
-                    >
-                      Посмотреть предложение →
-                    </button>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <div className="customer-empty-card">
-                <div className="customer-car-icon">
-                  <ClipboardIcon />
-                </div>
-
-                <div>
-                  <h3>Новых заявок нет</h3>
-                  <p>
-                    Когда автосервисы ответят на ваши заказы,
-                    предложения появятся здесь.
-                  </p>
-                </div>
-              </div>
-            )}
-          </section>
-        )}
-
-        {isGarage && (
-          <section className="customer-section customer-section-page">
-            <div className="services-header">
-              <div>
-                <p className="section-label">МОЙ ГАРАЖ</p>
-                <h2>Ваши автомобили</h2>
-                <p className="services-subtitle">
-                  Храните автомобили в одном месте и быстрее
-                  записывайтесь в сервис.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className="primary-button"
-                onClick={() => {
-                  setCabinetError('');
-                  setShowCarForm((open) => !open);
-                }}
-              >
-                + Добавить автомобиль
-              </button>
-            </div>
-
-            {showCarForm && (
-              <form
-                className="customer-settings-card"
-                onSubmit={saveCar}
-              >
-                <div className="customer-settings-row">
-                  <input
-                    value={carDraft.brand}
-                    onChange={(event) =>
-                      setCarDraft((draft) => ({
-                        ...draft,
-                        brand: event.target.value,
-                      }))
-                    }
-                    placeholder="Марка"
-                    required
-                  />
-                  <input
-                    value={carDraft.model}
-                    onChange={(event) =>
-                      setCarDraft((draft) => ({
-                        ...draft,
-                        model: event.target.value,
-                      }))
-                    }
-                    placeholder="Модель"
-                    required
-                  />
-                </div>
-                <div className="customer-settings-row">
-                  <input
-                    value={carDraft.year}
-                    onChange={(event) =>
-                      setCarDraft((draft) => ({
-                        ...draft,
-                        year: event.target.value,
-                      }))
-                    }
-                    placeholder="Год"
-                    inputMode="numeric"
-                  />
-                  <input
-                    value={carDraft.mileage}
-                    onChange={(event) =>
-                      setCarDraft((draft) => ({
-                        ...draft,
-                        mileage: event.target.value,
-                      }))
-                    }
-                    placeholder="Пробег, км"
-                    inputMode="numeric"
-                  />
-                  <input
-                    value={carDraft.vin}
-                    onChange={(event) =>
-                      setCarDraft((draft) => ({
-                        ...draft,
-                        vin: event.target.value,
-                      }))
-                    }
-                    placeholder="VIN"
-                  />
-                </div>
-                {cabinetError && <p>{cabinetError}</p>}
-                <button
-                  type="submit"
-                  className="primary-button"
-                >
-                  Сохранить автомобиль
-                </button>
-              </form>
-            )}
-
-            {customerCars.length > 0 ? (
-              <div className="customer-garage-list">
-                {customerCars.map((car) => (
-                  <article
-                    className="customer-car-card"
-                    key={car.id}
-                  >
-                    <div className="customer-car-icon">
-                      <CarIcon />
-                    </div>
-
-                    <div className="customer-car-info">
-                      <h3>
-                        {car.brand || 'Автомобиль'}{' '}
-                        {car.model || ''}
-                      </h3>
-
-                      <p>
-                        {car.year || '—'} год ·{' '}
-                        {car.mileage || '—'} км
-                      </p>
-                    </div>
-
-                    <div className="customer-car-details">
-                      <div>
-                        <span>VIN</span>
-                        <strong>
-                          {car.vin || 'Не указан'}
-                        </strong>
-                      </div>
-
-                      <div>
-                        <span>Пробег</span>
-                        <strong>
-                          {car.mileage || 'Не указан'} км
-                        </strong>
-                      </div>
-
-                      <div>
-                        <span>Год выпуска</span>
-                        <strong>{car.year || '—'}</strong>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="customer-outline-button"
-                      onClick={() => removeCar(car.id)}
-                    >
-                      Удалить
-                    </button>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <div className="customer-empty-card">
-                <div className="customer-car-icon">
-                  <CarIcon />
-                </div>
-
-                <div>
-                  <h3>В гараже пока нет автомобилей</h3>
-                  <p>
-                    Добавьте автомобиль, чтобы использовать его
-                    при создании заказа.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  className="primary-button"
-                  onClick={() => {
-                    setCabinetError('');
-                    setShowCarForm(true);
-                  }}
-                >
-                  Добавить автомобиль
-                </button>
-              </div>
-            )}
-          </section>
-        )}
-
-        {isSettings && (
-          <section className="customer-section customer-section-page">
-            <div className="services-header">
-              <div>
-                <p className="section-label">АККАУНТ</p>
-                <h2>Настройки</h2>
-                <p className="services-subtitle">
-                  Управляйте своими персональными данными и
-                  настройками аккаунта.
-                </p>
-              </div>
-            </div>
-
-            <div className="customer-settings-card">
-              <form onSubmit={saveSettings}>
-                <div className="customer-settings-row">
-                  <div>
-                    <span className="customer-settings-label">
-                      Имя
-                    </span>
-                    {settingsMode === 'name' ? (
-                      <input
-                        value={settingsName}
-                        onChange={(event) =>
-                          setSettingsName(event.target.value)
-                        }
-                        required
-                      />
-                    ) : (
-                      <strong>
-                        {user?.name || 'Не указано'}
-                      </strong>
-                    )}
-                  </div>
-
-                  <button
-                    type={settingsMode === 'name' ? 'submit' : 'button'}
-                    className="customer-outline-button"
-                    onClick={() => {
-                      if (settingsMode !== 'name') {
-                        setCabinetError('');
-                        setSettingsName(user?.name || '');
-                        setSettingsMode('name');
-                      }
-                    }}
-                  >
-                    {settingsMode === 'name' ? 'Сохранить' : 'Изменить'}
-                  </button>
-                </div>
-
-                <div className="customer-settings-divider" />
-
-                <div className="customer-settings-row">
-                  <div>
-                    <span className="customer-settings-label">
-                      Email
-                    </span>
-                    {settingsMode === 'email' ? (
-                      <input
-                        type="email"
-                        value={settingsEmail}
-                        onChange={(event) =>
-                          setSettingsEmail(event.target.value)
-                        }
-                        required
-                      />
-                    ) : (
-                      <strong>
-                        {user?.email || 'Не указан'}
-                      </strong>
-                    )}
-                  </div>
-
-                  <button
-                    type={settingsMode === 'email' ? 'submit' : 'button'}
-                    className="customer-outline-button"
-                    onClick={() => {
-                      if (settingsMode !== 'email') {
-                        setCabinetError('');
-                        setSettingsEmail(user?.email || '');
-                        setSettingsMode('email');
-                      }
-                    }}
-                  >
-                    {settingsMode === 'email' ? 'Сохранить' : 'Изменить'}
-                  </button>
-                </div>
-
-                <div className="customer-settings-divider" />
-
-                <div className="customer-settings-row">
-                  <div>
-                    <span className="customer-settings-label">
-                      Пароль
-                    </span>
-                    {settingsMode === 'password' ? (
-                      <div>
-                        <input
-                          type="password"
-                          value={currentPassword}
-                          onChange={(event) =>
-                            setCurrentPassword(event.target.value)
-                          }
-                          placeholder="Текущий пароль"
-                          required
-                        />
-                        <input
-                          type="password"
-                          value={newPassword}
-                          onChange={(event) =>
-                            setNewPassword(event.target.value)
-                          }
-                          placeholder="Новый пароль"
-                          minLength={8}
-                          required
-                        />
-                      </div>
-                    ) : (
-                      <strong>••••••••••</strong>
-                    )}
-                  </div>
-
-                  <button
-                    type={settingsMode === 'password' ? 'submit' : 'button'}
-                    className="customer-outline-button"
-                    onClick={() => {
-                      if (settingsMode !== 'password') {
-                        setCabinetError('');
-                        setCurrentPassword('');
-                        setNewPassword('');
-                        setSettingsMode('password');
-                      }
-                    }}
-                  >
-                    {settingsMode === 'password'
-                      ? 'Сохранить'
-                      : 'Изменить пароль'}
-                  </button>
-                </div>
-
-                {cabinetError && <p>{cabinetError}</p>}
-              </form>
-            </div>
-
-            <div className="customer-settings-card customer-settings-danger">
-              <div>
-                <span className="customer-settings-label">
-                  ВЫХОД
-                </span>
-                <h3>Выйти из аккаунта</h3>
-                <p>
-                  После выхода потребуется снова войти в аккаунт.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className="customer-profile-menu-button logout"
-                onClick={handleLogout}
-              >
-                Выйти
-              </button>
-            </div>
-          </section>
-        )}
-
-        {isOverview && (
-          <>
 
         {/* ===================================================
             КАК ЭТО РАБОТАЕТ
@@ -1798,7 +1051,7 @@ function HomePage({
                     className="shop-book"
                     onClick={() => openService(service)}
                   >
-                    Записаться
+                    {canBookOnline(user) ? 'Записаться' : 'Подробнее'}
                   </button>
                 </div>
               </article>
@@ -2188,9 +1441,6 @@ function HomePage({
             onSubmitReview={submitShopReview}
             onDeleteReview={deleteShopReview}
           />
-        )}
-
-          </>
         )}
 
         {/* ===================================================

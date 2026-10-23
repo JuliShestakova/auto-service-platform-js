@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCity } from '../contexts/CityContext';
 import { DEFAULT_CITY } from '../data/cities';
 import { getExecutor, listExecutorReviews } from '../services/executors';
+import { canBookOnline } from '../services/orders';
 import { canCustomerReview, createReview, deleteReview } from '../services/reviews';
 
 function formatReviewDate(value) {
@@ -235,6 +236,7 @@ function ExecutorDetailsPage() {
           <p>Телефон: {executor.phone || 'Не указан'}</p>
           {executor.description && <p>{executor.description}</p>}
         </div>
+        {canBookOnline(user) ? (
         <div className="result-actions">
           <button
             type="button"
@@ -244,6 +246,7 @@ function ExecutorDetailsPage() {
             Записаться
           </button>
         </div>
+        ) : null}
       </article>
 
       <section className="search-summary">

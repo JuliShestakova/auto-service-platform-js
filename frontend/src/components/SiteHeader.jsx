@@ -64,8 +64,6 @@ export default function SiteHeader({
   onRegister,
   scrolled = false,
   variant = 'default',
-  cabinetNav = [],
-  activeCabinet = '',
   searchValue = '',
   onSearchChange,
   noticeCount = 0,

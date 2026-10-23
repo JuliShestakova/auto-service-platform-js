@@ -13,6 +13,15 @@ import { CityProvider, useCity } from './contexts/CityContext';
 import { LocationProvider } from './contexts/LocationContext';
 import { DEFAULT_CITY } from './data/cities';
 import MapPage from './pages/MapPage';
+import HomePage from './pages/HomePage';
+import SearchPage from './pages/SearchPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import CustomerDashboardPage from './pages/CustomerDashboardPage';
+import ExecutorDetailsPage from './pages/ExecutorDetailsPage';
+import ExecutorDashboardPage from './pages/ExecutorDashboardPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import ProtectedRoute from './contexts/ProtectedRoute';
 
 function CitySearchRedirect() {
   const { city } = useCity();
@@ -23,20 +32,6 @@ function CitySearchRedirect() {
     />
   );
 }
-
-import HomePage from './pages/HomePage';
-import SearchPage from './pages/SearchPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-
-import CustomerDashboardPage from './pages/CustomerDashboardPage';
-
-import ExecutorDetailsPage from './pages/ExecutorDetailsPage';
-
-import ExecutorDashboardPage from './pages/ExecutorDashboardPage';
-import AdminDashboardPage from './pages/AdminDashboardPage';
-
-import ProtectedRoute from './contexts/ProtectedRoute';
 
 
 function App() {
@@ -125,7 +120,6 @@ function App() {
             path="/"
             element={
               <HomePage
-                section="overview"
                 onLogin={openLogin}
                 onRegister={openRegister}
               />

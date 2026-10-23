@@ -125,5 +125,3 @@ export default function ServiceSuggest({
     </div>
   );
 }
-
-export { resolveBestService };

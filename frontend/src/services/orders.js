@@ -1,5 +1,9 @@
 import { detailMessage, parseJson } from './api';
 
+export function canBookOnline(user) {
+  return !user || user.role === 'customer';
+}
+
 export async function listOrders(authFetch) {
   const response = await authFetch('/api/orders');
   if (!response.ok) {

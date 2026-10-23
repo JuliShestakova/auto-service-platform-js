@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
-import ServiceSuggest, { resolveBestService } from '../components/ServiceSuggest';
+import ServiceSuggest from '../components/ServiceSuggest';
 import { SERVICE_GROUPS } from '../data/serviceCatalog';
+import { resolveBestService } from '../utils/fuzzyService';
 import { CITIES, DEFAULT_CITY } from '../data/cities';
 import shopImage1 from '../assets/shops/shop-1.jpg';
 import shopImage2 from '../assets/shops/shop-2.jpg';
@@ -216,11 +217,6 @@ function statusLabel(status) {
 
 function isUnackedCancel(item) {
   return item?.status === 'Отменён' && !item.cancel_ack_at;
-}
-
-function weekdayLong(iso) {
-  const label = parseIso(iso).toLocaleDateString('ru-RU', { weekday: 'long' });
-  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 function chipTone(status) {
@@ -949,15 +945,6 @@ export default function ExecutorDashboardPage() {
     </div>
   );
 
-  const cabinetNav = [
-    { id: 'overview', label: 'Обзор', onClick: () => openCabinetSection('overview') },
-    {
-      id: 'requests',
-      label: 'Записи',
-      onClick: () => openCabinetSection('requests'),
-    },
-  ];
-
   if (!user) {
     return (
       <div className="role-dashboard-page">
@@ -982,7 +969,6 @@ export default function ExecutorDashboardPage() {
     <div className="role-dashboard-page ex-cab-page">
       <SiteHeader
         variant="executor"
-        cabinetNav={cabinetNav}
         searchValue={search}
         onSearchChange={setSearch}
         noticeCount={unreadNotices.length}
