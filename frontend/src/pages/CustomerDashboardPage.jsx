@@ -134,9 +134,9 @@ function SearchIcon() {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       aria-hidden="true"
     >
       <circle cx="11" cy="11" r="6.5" />
@@ -961,10 +961,10 @@ function CustomerDashboardPage({
               <Link to="/login" className="customer-primary-button">
                 Войти в кабинет →
               </Link>
-            </div>
+                </div>
           </section>
         </main>
-      </div>
+            </div>
     );
   }
 
@@ -1004,7 +1004,7 @@ function CustomerDashboardPage({
                 <div className="cab-search-field">
                   <span className="cab-search-icon" aria-hidden="true">
                     <SearchIcon />
-                  </span>
+            </span>
                   <ServiceSuggest
                     value={workQuery}
                     options={workOptions}
@@ -1034,33 +1034,33 @@ function CustomerDashboardPage({
                   <span>
                     <strong>{activeBookings.length}</strong>
                     <small>Активные записи</small>
-                  </span>
+            </span>
                 </a>
                 <a href="#my-bookings" className="cab-stat">
                   <span className="cab-stat-icon"><ClipboardIcon /></span>
                   <span>
                     <strong>{orders.length}</strong>
                     <small>Всего записей</small>
-                  </span>
+            </span>
                 </a>
                 <a href="#favorites" className="cab-stat">
                   <span className="cab-stat-icon"><HeartStatIcon /></span>
                   <span>
                     <strong>{favoriteIds.length || favoriteShops.length}</strong>
                     <small>Избранное</small>
-                  </span>
+            </span>
                 </a>
               </div>
 
               <div className="cab-toolbar">
-                <div>
+                  <div>
                   <p className="customer-section-label">ЗАПИСИ</p>
                   <h2>Ваш кабинет</h2>
-                </div>
+                  </div>
                 <Link to="/search" className="customer-primary-button">
                   Записаться →
-                </Link>
-              </div>
+                  </Link>
+                </div>
 
               <div className="cab-grid">
                 <div className="cab-main-col">
@@ -1092,17 +1092,17 @@ function CustomerDashboardPage({
                                 ) : (
                                   visibleNearest.executor_name || 'Автосервис'
                                 )}
-                              </h3>
+                      </h3>
                               {visibleNearest.executor_rating != null && (
                                 <p className="cab-rating">
                                   ★ {visibleNearest.executor_rating}
                                 </p>
                               )}
-                            </div>
+                    </div>
                             <span className={`cab-badge cab-badge-${orderStatusMeta(visibleNearest.status).tone}`}>
                               {orderStatusMeta(visibleNearest.status).label}
                             </span>
-                          </div>
+                  </div>
 
                           <ul className="cab-booking-meta">
                             <li>
@@ -1151,7 +1151,7 @@ function CustomerDashboardPage({
                                 Отменить запись
                               </button>
                             ) : null}
-                          </div>
+                    </div>
                         </div>
                       </div>
                     ) : (
@@ -1161,7 +1161,7 @@ function CustomerDashboardPage({
                           {searchActive
                             ? 'Нет активных записей с этой услугой'
                             : 'Записей пока нет'}
-                        </h3>
+                      </h3>
                         <p>
                           {searchActive
                             ? 'Проверьте список ниже — там есть и уже выполненные визиты.'
@@ -1170,9 +1170,9 @@ function CustomerDashboardPage({
                         {searchActive ? null : (
                           <Link to="/search" className="customer-primary-button">
                             Записаться →
-                          </Link>
+                    </Link>
                         )}
-                      </div>
+                  </div>
                     )}
                   </article>
 
@@ -1220,7 +1220,7 @@ function CustomerDashboardPage({
                                     onToggle={() => toggleFavorite(executorId)}
                                   />
                                 ) : null}
-                              </div>
+                  </div>
 
                               <div className="cab-booking-card-body">
                                 <div className="cab-booking-card-main">
@@ -1248,7 +1248,7 @@ function CustomerDashboardPage({
                                       Мастер: {order.staff_name}
                                     </p>
                                   ) : null}
-                                </div>
+                </div>
 
                                 <div className="cab-booking-card-side">
                                   <span className={`cab-badge cab-badge-${meta.tone}`}>
@@ -1281,7 +1281,7 @@ function CustomerDashboardPage({
                                         Отменить
                                       </button>
                                     ) : null}
-                                  </div>
+                    </div>
                                 </div>
                               </div>
                             </li>
@@ -1311,18 +1311,18 @@ function CustomerDashboardPage({
                         ) : (
                           <Link to="/search" className="customer-primary-button">
                             Найти автосервис →
-                          </Link>
+                      </Link>
                         )}
-                      </div>
+                    </div>
                     )}
                   </article>
-                </div>
+                  </div>
 
                 <aside className="cab-side-col">
                   <article className="cab-card" id="favorites">
                     <div className="cab-card-head">
                       <h2>Избранные автосервисы</h2>
-                    </div>
+                </div>
 
                     {favoriteShops.length > 0 ? (
                       <ul className="cab-fav-list">
@@ -1342,20 +1342,20 @@ function CustomerDashboardPage({
                                   {(shopCityLabel(shop.name, shop.city) || shop.city) ? (
                                     <span className="cab-fav-city">
                                       {shopCityLabel(shop.name, shop.city) || shop.city}
-                                    </span>
+                        </span>
                                   ) : null}
                                   <span className="cab-fav-meta">
                                     ★ {shop.rating}
                                     {shop.address ? ` · ${shop.address}` : ''}
-                                  </span>
-                                </div>
+                      </span>
+                    </div>
                               </button>
                               <FavoriteButton
                                 className="cab-fav-heart"
                                 active={isFavorite(shop.id)}
                                 onToggle={() => toggleFavorite(shop.id)}
                               />
-                            </div>
+                </div>
                             <div className="cab-fav-card-actions">
                               <button
                                 type="button"
@@ -1375,7 +1375,7 @@ function CustomerDashboardPage({
                               ) : (
                                 <span className="cab-fav-reviewed">Отзыв оставлен</span>
                               )}
-                            </div>
+                      </div>
                           </li>
                         ))}
                       </ul>
@@ -1390,7 +1390,7 @@ function CustomerDashboardPage({
                   <article className="cab-card" id="my-reviews">
                     <div className="cab-card-head">
                       <h2>Мои отзывы</h2>
-                    </div>
+                        </div>
                     {filteredReviews.length > 0 ? (
                       <ul className="cab-review-list">
                         {filteredReviews.slice(0, 6).map((review) => {
@@ -1423,21 +1423,21 @@ function CustomerDashboardPage({
                                 <span className="cab-review-stars">
                                   {'★'.repeat(Number(review.rating) || 0)}
                                   {'☆'.repeat(Math.max(0, 5 - (Number(review.rating) || 0)))}
-                                </span>
+                        </span>
                                 {review.text ? (
                                   <p>{review.text}</p>
                                 ) : (
                                   <p className="cab-muted">Без комментария</p>
                                 )}
-                                <button
-                                  type="button"
+                        <button
+                          type="button"
                                   className="cab-review-delete"
                                   disabled={deletingReviewId === review.id}
                                   onClick={() => deleteMyReview(review)}
-                                >
+                        >
                                   {deletingReviewId === review.id ? 'Удаляем…' : 'Удалить отзыв'}
-                                </button>
-                              </div>
+                        </button>
+                      </div>
                             </li>
                           );
                         })}
@@ -1464,8 +1464,8 @@ function CustomerDashboardPage({
                         ) : (
                           <Link to="/search" className="cab-link">Найти автосервис</Link>
                         )}
-                      </div>
-                    )}
+                  </div>
+              )}
                   </article>
                 </aside>
               </div>
@@ -1480,7 +1480,7 @@ function CustomerDashboardPage({
                   <h2>Настройки</h2>
                   <p>Обновите имя, email и пароль своего аккаунта.</p>
                 </div>
-              </div>
+                </div>
 
               <div className="customer-settings-card">
                 <form className="customer-settings-form" onSubmit={saveSettings}>
@@ -1495,7 +1495,7 @@ function CustomerDashboardPage({
                         required
                       />
                     </label>
-                  </div>
+              </div>
 
                   <div className="customer-settings-divider" />
 
@@ -1525,7 +1525,7 @@ function CustomerDashboardPage({
                         placeholder="Нужен только для смены пароля"
                       />
                     </label>
-                  </div>
+                      </div>
 
                   <div className="customer-settings-divider" />
 
@@ -1540,7 +1540,7 @@ function CustomerDashboardPage({
                         placeholder="Минимум 8 символов"
                       />
                     </label>
-                  </div>
+                        </div>
 
                   {(settingsError || settingsMessage) && (
                     <div className="customer-settings-feedback">
@@ -1549,20 +1549,20 @@ function CustomerDashboardPage({
                       ) : (
                         <p className="customer-settings-success">{settingsMessage}</p>
                       )}
-                    </div>
+                      </div>
                   )}
 
                   <div className="customer-settings-actions">
-                    <button
+                      <button
                       type="submit"
-                      className="customer-primary-button"
+                        className="customer-primary-button"
                       disabled={settingsSaving}
-                    >
+                      >
                       {settingsSaving ? 'Сохранение…' : 'Сохранить изменения'}
-                    </button>
-                  </div>
+                      </button>
+                </div>
                 </form>
-              </div>
+                  </div>
 
               <div className="customer-settings-card">
                 <form
@@ -1609,7 +1609,7 @@ function CustomerDashboardPage({
                     </button>
                   </div>
                 </form>
-              </div>
+                </div>
 
               <div className="customer-settings-card customer-settings-danger">
                 <div>
@@ -1628,7 +1628,7 @@ function CustomerDashboardPage({
             </section>
           )}
 
-        </div>
+                      </div>
 
       </main>
 
@@ -1692,13 +1692,13 @@ function CustomerDashboardPage({
                       </button>
                     );
                   })}
-                </div>
+                      </div>
                 <p className="review-rating-hint">
                   {reviewRating > 0
                     ? `Выбрано: ${reviewRating} из 5`
                     : 'Нажмите на звезду, чтобы поставить оценку'}
                 </p>
-              </div>
+                        </div>
 
               <label className="review-text-field">
                 <span>Комментарий</span>
@@ -1731,10 +1731,10 @@ function CustomerDashboardPage({
                 >
                   {reviewSaving ? 'Сохраняем…' : 'Отправить отзыв'}
                 </button>
-              </div>
+                        </div>
             </form>
-          </div>
-        </div>
+                        </div>
+                      </div>
       ) : null}
 
       {bookingDetail ? (
@@ -1762,12 +1762,12 @@ function CustomerDashboardPage({
             <h2 id="booking-detail-title">Детали записи</h2>
 
             <dl className="booking-detail-list">
-              <div>
+                  <div>
                 <dt>Автосервис</dt>
                 <dd>
                   {bookingDetail.executor_id ? (
-                    <button
-                      type="button"
+                  <button
+                    type="button"
                       className="cab-shop-link"
                       onClick={() => {
                         closeBookingDetail();
@@ -1775,16 +1775,16 @@ function CustomerDashboardPage({
                       }}
                     >
                       {bookingDetail.executor_name || 'Автосервис'}
-                    </button>
+                  </button>
                   ) : (
                     bookingDetail.executor_name || 'Автосервис не выбран'
                   )}
                 </dd>
               </div>
-              <div>
+                <div>
                 <dt>Услуга</dt>
                 <dd>{bookingDetail.title || '—'}</dd>
-              </div>
+                </div>
               <div>
                 <dt>Дата и время</dt>
                 <dd>
@@ -1796,7 +1796,7 @@ function CustomerDashboardPage({
                     : 'Не указано'}
                 </dd>
               </div>
-              <div>
+                  <div>
                 <dt>Мастер</dt>
                 <dd>
                   {bookingDetail.staff_name
@@ -1811,9 +1811,9 @@ function CustomerDashboardPage({
                     className={`cab-badge cab-badge-${orderStatusMeta(bookingDetail.status).tone}`}
                   >
                     {orderStatusMeta(bookingDetail.status).label}
-                  </span>
+                    </span>
                 </dd>
-              </div>
+                  </div>
               {bookingDetail.status === 'Отменён' && bookingDetail.cancel_reason ? (
                 <div>
                   <dt>Причина отмены</dt>
@@ -1823,25 +1823,25 @@ function CustomerDashboardPage({
             </dl>
 
             <div className="confirm-modal-actions">
-              <button
-                type="button"
-                className="customer-outline-button"
+                  <button
+                    type="button"
+                    className="customer-outline-button"
                 onClick={closeBookingDetail}
-              >
+                  >
                 Закрыть
-              </button>
+                  </button>
               {bookingDetail.status !== 'Завершён'
                 && bookingDetail.status !== 'Отменён' ? (
-                <button
-                  type="button"
+                  <button
+                    type="button"
                   className="customer-primary-button confirm-modal-danger"
                   onClick={() => askCancelOrder(bookingDetail)}
-                >
+                  >
                   Отменить запись
-                </button>
+                  </button>
               ) : null}
-            </div>
-          </div>
+                </div>
+                  </div>
         </div>
       ) : null}
 
@@ -1858,14 +1858,14 @@ function CustomerDashboardPage({
             aria-labelledby="cancel-booking-title"
             onClick={(event) => event.stopPropagation()}
           >
-            <button
-              type="button"
+                  <button
+                    type="button"
               className="confirm-modal-close"
               onClick={closeCancelModal}
               aria-label="Закрыть"
-            >
+                  >
               ×
-            </button>
+                  </button>
             <p className="confirm-modal-label">Отмена записи</p>
             <h2 id="cancel-booking-title">Отменить эту запись?</h2>
             <p>
@@ -1892,14 +1892,14 @@ function CustomerDashboardPage({
               <p className="confirm-modal-error">{cancelError}</p>
             ) : null}
             <div className="confirm-modal-actions">
-              <button
-                type="button"
+                <button
+                  type="button"
                 className="customer-outline-button"
                 onClick={closeCancelModal}
                 disabled={Boolean(cancelingId)}
-              >
+                >
                 Оставить запись
-              </button>
+                </button>
               <button
                 type="button"
                 className="customer-primary-button confirm-modal-danger"
@@ -1908,8 +1908,8 @@ function CustomerDashboardPage({
               >
                 {cancelingId ? 'Отменяем…' : 'Да, отменить'}
               </button>
-            </div>
-          </div>
+              </div>
+        </div>
         </div>
       ) : null}
 

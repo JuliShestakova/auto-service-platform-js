@@ -8010,6 +8010,37 @@ button.ex-kpi-card.is-active {
   opacity: 1;
 }
 
+.ex-week-cell-stack {
+  display: grid;
+  gap: 4px;
+}
+
+.ex-week-add {
+  width: 100%;
+  min-height: 24px;
+  padding: 0 6px;
+  border: 1px dashed #eadad3;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ex-week-add:hover {
+  background: #fff7f3;
+  border-color: color-mix(in srgb, var(--accent) 40%, #eadad3);
+}
+
+.filter-select-option.is-disabled,
+.filter-select-option.is-disabled:hover {
+  background: transparent;
+  color: #b5aaa4;
+  cursor: default;
+}
+
 .ex-week.is-day .ex-week-row {
   min-height: 84px;
 }

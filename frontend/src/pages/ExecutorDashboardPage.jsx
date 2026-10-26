@@ -174,6 +174,25 @@ function hourOf(time) {
   return String(match[1]).padStart(2, '0') + ':00';
 }
 
+function staffBusyIds(orders, visitDate, visitTime) {
+  const hour = hourOf(visitTime);
+  const busy = new Set();
+  if (!visitDate || !hour) {
+    return busy;
+  }
+  orders.forEach((item) => {
+    if (
+      item.staff_id
+      && item.visit_date === visitDate
+      && hourOf(item.visit_time) === hour
+      && item.status !== 'Отменён'
+    ) {
+      busy.add(String(item.staff_id));
+    }
+  });
+  return busy;
+}
+
 function shortName(name) {
   const parts = String(name || '').trim().split(/\s+/);
   if (parts.length < 2) return name || 'Клиент';
@@ -574,9 +593,20 @@ export default function ExecutorDashboardPage() {
   }, [pickedServices, serviceList]);
   servicesDirtyRef.current = servicesDirty;
 
+  const bookingSlotBusyIds = staffBusyIds(
+    calendarBookings,
+    newBooking.visit_date,
+    newBooking.visit_time,
+  );
+
   const askConfirm = (order) => {
     setConfirmError('');
-    setConfirmStaffId(staff[0] ? String(staff[0].id) : '');
+    const busy = staffBusyIds(calendarBookings, order?.visit_date, order?.visit_time);
+    const free = staff.find((item) => !busy.has(String(item.id)));
+    setConfirmStaffId(free ? String(free.id) : '');
+    if (staff.length > 0 && !free) {
+      setConfirmError('Все мастера заняты в это время. Выберите другое время или добавьте сотрудника.');
+    }
     setConfirmTarget(order);
   };
 
@@ -744,13 +774,20 @@ export default function ExecutorDashboardPage() {
     setStaffQuickError('');
     setStaffQuickDraft({ name: '', positions: [], phone: '' });
     setStaffQuickOpen(false);
+    const visitDate = preset.visit_date || selectedDay || todayIso();
+    const visitTime = preset.visit_time || '10:00';
+    const busy = staffBusyIds(calendarBookings, visitDate, visitTime);
+    const free = staff.find((item) => !busy.has(String(item.id)));
     setNewBooking({
       guest_name: '',
       title: '',
-      staff_id: staff[0] ? String(staff[0].id) : '',
-      visit_date: preset.visit_date || selectedDay || todayIso(),
-      visit_time: preset.visit_time || '10:00',
+      staff_id: free ? String(free.id) : '',
+      visit_date: visitDate,
+      visit_time: visitTime,
     });
+    if (staff.length > 0 && !free) {
+      setNewBookingError('Все мастера заняты в это время. Выберите другое время или другого сотрудника.');
+    }
     setNewBookingOpen(true);
   };
 
@@ -777,6 +814,11 @@ export default function ExecutorDashboardPage() {
     }
     if (!newBooking.staff_id) {
       setNewBookingError('Назначьте мастера');
+      return;
+    }
+    if (staffBusyIds(calendarBookings, newBooking.visit_date, newBooking.visit_time)
+      .has(String(newBooking.staff_id))) {
+      setNewBookingError('Этот мастер уже занят в выбранное время. Выберите другого.');
       return;
     }
     if (!newBooking.visit_date || !newBooking.visit_time) {
@@ -1588,12 +1630,20 @@ export default function ExecutorDashboardPage() {
                   value={confirmStaffId}
                   onChange={(event) => setConfirmStaffId(event.target.value)}
                 >
-                  {staff.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                      {item.position ? ` · ${item.position}` : ''}
-                    </option>
-                  ))}
+                  {staff.map((item) => {
+                    const busy = staffBusyIds(
+                      calendarBookings,
+                      confirmTarget.visit_date,
+                      confirmTarget.visit_time,
+                    ).has(String(item.id));
+                    return (
+                      <option key={item.id} value={item.id} disabled={busy}>
+                        {item.name}
+                        {item.position ? ` · ${item.position}` : ''}
+                        {busy ? ' · занят' : ''}
+                      </option>
+                    );
+                  })}
                 </select>
               </label>
             ) : (
@@ -1609,7 +1659,7 @@ export default function ExecutorDashboardPage() {
               <button
                 type="button"
                 className="customer-primary-button"
-                disabled={Boolean(confirmingId) || staff.length === 0}
+                disabled={Boolean(confirmingId) || staff.length === 0 || !confirmStaffId}
                 onClick={confirmOrder}
               >
                 {confirmingId ? 'Подтверждаем…' : 'Подтвердить'}
@@ -1692,10 +1742,18 @@ export default function ExecutorDashboardPage() {
                   value={newBooking.staff_id}
                   placeholder="Выберите мастера"
                   searchPlaceholder="Поиск"
-                  options={staff.map((item) => ({
-                    value: String(item.id),
-                    label: item.position ? `${item.name} · ${item.position}` : item.name,
-                  }))}
+                  options={staff.map((item) => {
+                    const busy = bookingSlotBusyIds.has(String(item.id));
+                    return {
+                      value: String(item.id),
+                      disabled: busy,
+                      label: busy
+                        ? `${item.name} · занят`
+                        : item.position
+                          ? `${item.name} · ${item.position}`
+                          : item.name,
+                    };
+                  })}
                   action={{ value: '__new__', label: '+ Новый мастер' }}
                   onChange={(value) => {
                     if (value === '__new__') {
@@ -1717,20 +1775,46 @@ export default function ExecutorDashboardPage() {
                   <input
                     type="date"
                     value={newBooking.visit_date}
-                    onChange={(event) => setNewBooking((draft) => ({
-                      ...draft,
-                      visit_date: event.target.value,
-                    }))}
+                    onChange={(event) => {
+                      const visitDate = event.target.value;
+                      setNewBooking((draft) => {
+                        const busy = staffBusyIds(
+                          calendarBookings,
+                          visitDate,
+                          draft.visit_time,
+                        );
+                        const stillFree = draft.staff_id && !busy.has(String(draft.staff_id));
+                        const free = staff.find((item) => !busy.has(String(item.id)));
+                        return {
+                          ...draft,
+                          visit_date: visitDate,
+                          staff_id: stillFree ? draft.staff_id : (free ? String(free.id) : ''),
+                        };
+                      });
+                    }}
                   />
                 </label>
                 <label className="cancel-reason-field">
                   Время
                   <select
                     value={newBooking.visit_time}
-                    onChange={(event) => setNewBooking((draft) => ({
-                      ...draft,
-                      visit_time: event.target.value,
-                    }))}
+                    onChange={(event) => {
+                      const visitTime = event.target.value;
+                      setNewBooking((draft) => {
+                        const busy = staffBusyIds(
+                          calendarBookings,
+                          draft.visit_date,
+                          visitTime,
+                        );
+                        const stillFree = draft.staff_id && !busy.has(String(draft.staff_id));
+                        const free = staff.find((item) => !busy.has(String(item.id)));
+                        return {
+                          ...draft,
+                          visit_time: visitTime,
+                          staff_id: stillFree ? draft.staff_id : (free ? String(free.id) : ''),
+                        };
+                      });
+                    }}
                   >
                     {HOURS.map((hour) => (
                       <option key={hour} value={hour}>{hour}</option>
@@ -1752,7 +1836,12 @@ export default function ExecutorDashboardPage() {
                 <button
                   type="submit"
                   className="customer-primary-button"
-                  disabled={newBookingSaving || !newBooking.staff_id || !newBooking.title}
+                  disabled={
+                    newBookingSaving
+                    || !newBooking.staff_id
+                    || !newBooking.title
+                    || bookingSlotBusyIds.has(String(newBooking.staff_id))
+                  }
                 >
                   {newBookingSaving ? 'Сохраняем…' : 'Создать запись'}
                 </button>
@@ -2066,6 +2155,8 @@ function OverviewBoard({
             <WeekGrid
               days={boardView === 'day' ? days.filter((day) => day.iso === selectedDay) : days}
               bookings={bookings}
+              allBookings={loadBookings || bookings}
+              staff={staff}
               confirmingId={confirmingId}
               onOpenBooking={onOpenBooking}
               onSlotClick={(visit_date, visit_time) => onNewBooking({ visit_date, visit_time })}
@@ -2159,7 +2250,15 @@ function OverviewBoard({
   );
 }
 
-function WeekGrid({ days, bookings, confirmingId, onOpenBooking, onSlotClick }) {
+function WeekGrid({
+  days,
+  bookings,
+  allBookings,
+  staff = [],
+  confirmingId,
+  onOpenBooking,
+  onSlotClick,
+}) {
   const scrollerRef = useRef(null);
   const firstHitRef = useRef(null);
   const isDay = days.length === 1;
@@ -2207,6 +2306,8 @@ function WeekGrid({ days, bookings, confirmingId, onOpenBooking, onSlotClick }) 
           <span>{hour}</span>
           {days.map((day) => {
             const items = byCell.get(`${day.iso}|${hour}`) || [];
+            const busy = staffBusyIds(allBookings || bookings, day.iso, hour);
+            const canAdd = staff.some((person) => !busy.has(String(person.id)));
             const pin = !pinned && items.length > 0;
             if (pin) pinned = true;
             return (
@@ -2229,26 +2330,39 @@ function WeekGrid({ days, bookings, confirmingId, onOpenBooking, onSlotClick }) 
                   >
                     {isDay ? 'Свободно' : ''}
                   </button>
-                ) : items.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={`ex-chip ${isDay ? 'is-card' : ''} is-${chipTone(item.status)} ${isUnackedCancel(item) ? 'is-blink' : ''}`}
-                    onClick={() => onOpenBooking?.(item)}
-                    disabled={confirmingId === item.id}
-                    title={`${item.customer_name} · ${item.title}`}
-                  >
-                    {isDay ? (
-                      <span className="ex-chip-avatar">{initials(item.customer_name)}</span>
+                ) : (
+                  <div className="ex-week-cell-stack">
+                    {items.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={`ex-chip ${isDay ? 'is-card' : ''} is-${chipTone(item.status)} ${isUnackedCancel(item) ? 'is-blink' : ''}`}
+                        onClick={() => onOpenBooking?.(item)}
+                        disabled={confirmingId === item.id}
+                        title={`${item.customer_name} · ${item.title}${item.staff_name ? ` · ${item.staff_name}` : ''}`}
+                      >
+                        {isDay ? (
+                          <span className="ex-chip-avatar">{initials(item.customer_name)}</span>
+                        ) : null}
+                        <span className="ex-chip-body">
+                          <strong>{shortName(item.customer_name)}</strong>
+                          <em>{item.status === 'Отменён' ? 'Отменена' : item.title}</em>
+                          {item.staff_name ? <small>{item.staff_name}</small> : null}
+                        </span>
+                        {isDay ? <time>{timeRange(item.visit_time)}</time> : null}
+                      </button>
+                    ))}
+                    {canAdd ? (
+                      <button
+                        type="button"
+                        className="ex-week-add"
+                        onClick={() => onSlotClick?.(day.iso, hour)}
+                      >
+                        + ещё мастер
+                      </button>
                     ) : null}
-                    <span className="ex-chip-body">
-                      <strong>{shortName(item.customer_name)}</strong>
-                      <em>{item.status === 'Отменён' ? 'Отменена' : item.title}</em>
-                      {isDay && item.staff_name ? <small>{item.staff_name}</small> : null}
-                    </span>
-                    {isDay ? <time>{timeRange(item.visit_time)}</time> : null}
-                  </button>
-                ))}
+                  </div>
+                )}
               </div>
             );
           })}

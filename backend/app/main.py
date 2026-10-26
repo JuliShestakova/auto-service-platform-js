@@ -391,6 +391,28 @@ async def _staff_by_id(db: AsyncSession, staff_id: int | None) -> Staff | None:
     return result.scalar_one_or_none()
 
 
+async def _staff_slot_taken(
+    db: AsyncSession,
+    *,
+    executor_id: int,
+    staff_id: int,
+    visit_date,
+    visit_time: str,
+    exclude_order_id: int | None = None,
+) -> bool:
+    stmt = select(Order.id).where(
+        Order.executor_id == executor_id,
+        Order.staff_id == staff_id,
+        Order.visit_date == visit_date,
+        Order.visit_time == visit_time,
+        Order.status != "Отменён",
+    )
+    if exclude_order_id is not None:
+        stmt = stmt.where(Order.id != exclude_order_id)
+    result = await db.execute(stmt.limit(1))
+    return result.scalar_one_or_none() is not None
+
+
 def _staff_response(item: Staff) -> StaffResponse:
     return StaffResponse(
         id=item.id,
@@ -643,6 +665,17 @@ async def create_order(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Сотрудник не найден",
             )
+        if await _staff_slot_taken(
+            db,
+            executor_id=executor.id,
+            staff_id=staff.id,
+            visit_date=data.visit_date,
+            visit_time=data.visit_time,
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Этот мастер уже занят в выбранное время. Выберите другого.",
+            )
         status_value = "Запланирован"
 
     order = Order(
@@ -761,6 +794,18 @@ async def update_order(
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Сотрудник не найден",
+                )
+            if order.visit_date and order.visit_time and await _staff_slot_taken(
+                db,
+                executor_id=executor.id,
+                staff_id=staff.id,
+                visit_date=order.visit_date,
+                visit_time=order.visit_time,
+                exclude_order_id=order.id,
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Этот мастер уже занят в выбранное время. Выберите другого.",
                 )
             order.staff_id = staff.id
             order.status = "Запланирован"

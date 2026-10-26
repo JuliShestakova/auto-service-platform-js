@@ -106,8 +106,13 @@ export default function FilterSelect({
                   <li key={item.value} role="option" aria-selected={isSelected}>
                     <button
                       type="button"
-                      className={`filter-select-option${isSelected ? ' is-selected' : ''}`}
-                      onClick={() => pick(item.value)}
+                      className={`filter-select-option${isSelected ? ' is-selected' : ''}${item.disabled ? ' is-disabled' : ''}`}
+                      disabled={Boolean(item.disabled)}
+                      onClick={() => {
+                        if (!item.disabled) {
+                          pick(item.value);
+                        }
+                      }}
                     >
                       {item.label}
                     </button>
