@@ -217,7 +217,9 @@ function MapPage({ onLogin, onRegister }) {
 
   const submitBooking = async (event) => {
     event.preventDefault();
+    setBookingError('');
     if (!user) {
+      setBookingError('Войдите в кабинет, чтобы записаться.');
       onLogin?.();
       return;
     }
@@ -231,7 +233,7 @@ function MapPage({ onLogin, onRegister }) {
     }
     setBookingSaving(true);
     try {
-      const { ok } = await createOrder(authFetch, {
+      const { ok, error } = await createOrder(authFetch, {
         title: bookingService,
         description: '',
         executor_id: bookingExecutor.id,
@@ -239,10 +241,12 @@ function MapPage({ onLogin, onRegister }) {
         visit_time: bookingTime,
       });
       if (!ok) {
-        setBookingError('Не удалось сохранить запись');
+        setBookingError(error || 'Не удалось сохранить запись');
         return;
       }
       setBookingDone(true);
+    } catch {
+      setBookingError('Не удалось сохранить запись');
     } finally {
       setBookingSaving(false);
     }

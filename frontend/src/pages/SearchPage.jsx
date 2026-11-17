@@ -446,7 +446,8 @@ function SearchPage({ onLogin, onRegister }) {
     setBookingError('');
 
     if (!user) {
-      onLogin();
+      setBookingError('Войдите в кабинет, чтобы записаться.');
+      onLogin?.();
       return;
     }
 

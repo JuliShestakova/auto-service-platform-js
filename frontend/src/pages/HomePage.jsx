@@ -400,7 +400,7 @@ function Footer() {
 
         <div className="site-footer-column">
           <h4>Информация</h4>
-          <Link to="/register">Для автосервисов</Link>
+          <a href="/#for-executors">Для автосервисов</a>
           <a href="#faq">Вопросы и ответы</a>
           <a href="#blog">Блог</a>
         </div>
@@ -1059,7 +1059,7 @@ function HomePage({
           </div>
         </section>
 
-        <section className="owner-banner">
+        <section className="owner-banner" id="for-executors">
           <div>
             <h2>Вы автосервис?</h2>
             <p>

@@ -165,12 +165,12 @@ export default function SiteHeader({
             >
               Услуги
             </a>
-            <Link
-              to="/register"
+            <a
+              href="/#for-executors"
               className={`nav-button${activeNav === 'register' ? ' nav-button-active' : ''}`}
             >
               Для автосервисов
-            </Link>
+            </a>
             <Link
               to="/map"
               className={`nav-button${activeNav === 'map' ? ' nav-button-active' : ''}`}

@@ -98,12 +98,18 @@ class RegisterRequest(BaseModel):
     @field_validator("password")
     @classmethod
     def password_must_be_strong(cls, value: str) -> str:
-        if " " in value:
+        if " " in value or re.search(r"\s", value):
             raise ValueError("Пароль не должен содержать пробелы")
-        if not re.search(r"[A-Za-zА-Яа-яЁё]", value):
-            raise ValueError("Пароль должен содержать хотя бы одну букву")
+        if not re.search(r"[A-ZА-ЯЁ]", value):
+            raise ValueError("Пароль должен содержать заглавную букву")
+        if not re.search(r"[a-zа-яё]", value):
+            raise ValueError("Пароль должен содержать строчную букву")
         if not re.search(r"\d", value):
             raise ValueError("Пароль должен содержать хотя бы одну цифру")
+        if not re.search(r"[^A-Za-zА-Яа-яЁё0-9\s]", value):
+            raise ValueError(
+                "Пароль должен содержать спецсимвол, например !@#$%^&*"
+            )
         return value
 
     @field_validator("accept_terms", "accept_privacy")

@@ -8,6 +8,11 @@ import {
   isValidHoursRange,
   joinHoursRange,
 } from '../utils/hours';
+import {
+  generatePassword,
+  getPasswordChecks,
+  isValidPassword,
+} from '../utils/password';
 
 const EMAIL_ALLOWED = /[^a-z0-9@._-]/g;
 const EMAIL_PATTERN = (
@@ -100,17 +105,6 @@ function formatPhoneInput(value) {
   return result;
 }
 
-function isValidPassword(value) {
-  if (typeof value !== 'string' || value.length < 8 || value.length > 128) {
-    return false;
-  }
-  if (/\s/.test(value)) {
-    return false;
-  }
-  // Хотя бы одна буква и одна цифра
-  return /[A-Za-zА-Яа-яЁё]/.test(value) && /\d/.test(value);
-}
-
 function getErrorMessage(detail) {
   if (typeof detail === 'string') {
     return detail.replace(/^Value error,\s*/i, '');
@@ -158,6 +152,7 @@ function RegisterPage({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [role, setRole] = useState(initialRole === 'executor' ? 'executor' : 'customer');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
@@ -173,10 +168,22 @@ function RegisterPage({
   const [isLoading, setIsLoading] = useState(false);
 
   const isExecutor = role === 'executor';
+  const passwordChecks = useMemo(() => getPasswordChecks(password), [password]);
+  const passwordsMatch = Boolean(
+    passwordConfirm && password === passwordConfirm,
+  );
 
   useEffect(() => {
     setRole(initialRole === 'executor' ? 'executor' : 'customer');
   }, [initialRole]);
+
+  const fillGeneratedPassword = () => {
+    const next = generatePassword(12);
+    setPassword(next);
+    setPasswordConfirm(next);
+    setPasswordVisible(true);
+    setError('');
+  };
 
   const validationError = useMemo(() => {
     const trimmedName = name.trim();
@@ -230,7 +237,10 @@ function RegisterPage({
     }
 
     if (!isValidPassword(password)) {
-      return 'Пароль: минимум 8 символов, хотя бы одна буква и одна цифра';
+      return (
+        'Пароль: минимум 8 символов, заглавная и строчная буква, '
+        + 'цифра и спецсимвол'
+      );
     }
 
     if (password !== passwordConfirm) {
@@ -285,6 +295,7 @@ function RegisterPage({
     setEmail('');
     setPassword('');
     setPasswordConfirm('');
+    setPasswordVisible(false);
     setRole('customer');
     setPhone('');
     setAddress('');
@@ -609,21 +620,52 @@ function RegisterPage({
           </div>
 
           <div className="auth-field">
-            <label htmlFor="register-password">Пароль</label>
-            <input
-              id="register-password"
-              name="password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Минимум 8 символов, буква и цифра"
-              autoComplete="new-password"
-              minLength={8}
-              maxLength={128}
-              disabled={isLoading}
-              required
-            />
-            <small>Минимум 8 символов, хотя бы одна буква и одна цифра.</small>
+            <div className="auth-field-label-row">
+              <label htmlFor="register-password">Пароль</label>
+              <button
+                type="button"
+                className="password-generate-btn"
+                onClick={fillGeneratedPassword}
+                disabled={isLoading}
+              >
+                Сгенерировать
+              </button>
+            </div>
+            <div className="password-input-wrap">
+              <input
+                id="register-password"
+                name="password"
+                type={passwordVisible ? 'text' : 'password'}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Придумайте надёжный пароль"
+                autoComplete="new-password"
+                minLength={8}
+                maxLength={128}
+                disabled={isLoading}
+                required
+              />
+              <button
+                type="button"
+                className="password-visibility-btn"
+                onClick={() => setPasswordVisible((current) => !current)}
+                disabled={isLoading}
+                aria-label={passwordVisible ? 'Скрыть пароль' : 'Показать пароль'}
+              >
+                {passwordVisible ? 'Скрыть' : 'Показать'}
+              </button>
+            </div>
+            <ul className="password-rules" aria-live="polite">
+              {passwordChecks.map((rule) => (
+                <li
+                  key={rule.id}
+                  className={rule.ok ? 'is-ok' : 'is-pending'}
+                >
+                  <span aria-hidden="true">{rule.ok ? '✓' : '○'}</span>
+                  {rule.label}
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className="auth-field">
@@ -633,7 +675,7 @@ function RegisterPage({
             <input
               id="register-password-confirm"
               name="passwordConfirm"
-              type="password"
+              type={passwordVisible ? 'text' : 'password'}
               value={passwordConfirm}
               onChange={(event) => setPasswordConfirm(event.target.value)}
               placeholder="Повторите пароль"
@@ -643,6 +685,11 @@ function RegisterPage({
               disabled={isLoading}
               required
             />
+            {passwordConfirm ? (
+              <small className={passwordsMatch ? 'password-match-ok' : 'password-match-bad'}>
+                {passwordsMatch ? 'Пароли совпадают' : 'Пароли пока не совпадают'}
+              </small>
+            ) : null}
           </div>
 
           <fieldset className="auth-consents" disabled={isLoading}>

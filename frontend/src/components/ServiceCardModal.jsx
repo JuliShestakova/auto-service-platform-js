@@ -567,6 +567,12 @@ export default function ServiceCardModal({
                     </select>
                   </div>
 
+                  {!user ? (
+                    <p className="booking-login-hint">
+                      Чтобы записаться, войдите в кабинет.
+                    </p>
+                  ) : null}
+
                   {bookingError ? (
                     <p className="booking-error">{bookingError}</p>
                   ) : null}
@@ -576,7 +582,7 @@ export default function ServiceCardModal({
                     className="booking-submit"
                     disabled={bookingSaving}
                   >
-                    {bookingSaving ? 'Сохраняем…' : 'Записаться'}
+                    {bookingSaving ? 'Сохраняем…' : (user ? 'Записаться' : 'Войти в кабинет')}
                     <span>→</span>
                   </button>
                 </form>
