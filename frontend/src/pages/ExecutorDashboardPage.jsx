@@ -2332,33 +2332,51 @@ function WeekGrid({
                   </button>
                 ) : (
                   <div className="ex-week-cell-stack">
-                    {items.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        className={`ex-chip ${isDay ? 'is-card' : ''} is-${chipTone(item.status)} ${isUnackedCancel(item) ? 'is-blink' : ''}`}
-                        onClick={() => onOpenBooking?.(item)}
-                        disabled={confirmingId === item.id}
-                        title={`${item.customer_name} · ${item.title}${item.staff_name ? ` · ${item.staff_name}` : ''}`}
-                      >
-                        {isDay ? (
-                          <span className="ex-chip-avatar">{initials(item.customer_name)}</span>
-                        ) : null}
-                        <span className="ex-chip-body">
-                          <strong>{shortName(item.customer_name)}</strong>
-                          <em>{item.status === 'Отменён' ? 'Отменена' : item.title}</em>
-                          {item.staff_name ? <small>{item.staff_name}</small> : null}
-                        </span>
-                        {isDay ? <time>{timeRange(item.visit_time)}</time> : null}
-                      </button>
-                    ))}
+                    {items.map((item) => {
+                      const tipText = [
+                        item.customer_name,
+                        item.status === 'Отменён' ? 'Отменена' : item.title,
+                        item.staff_name || '',
+                        item.status || '',
+                      ].filter(Boolean).join(' · ');
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          className={`ex-chip ${isDay ? 'is-card' : 'is-compact'} is-${chipTone(item.status)} ${isUnackedCancel(item) ? 'is-blink' : ''}`}
+                          onClick={() => onOpenBooking?.(item)}
+                          disabled={confirmingId === item.id}
+                          aria-label={tipText}
+                        >
+                          {isDay ? (
+                            <span className="ex-chip-avatar">{initials(item.customer_name)}</span>
+                          ) : null}
+                          <span className="ex-chip-body">
+                            <strong>{shortName(item.customer_name)}</strong>
+                            <em>{item.status === 'Отменён' ? 'Отменена' : item.title}</em>
+                            {isDay && item.staff_name ? <small>{item.staff_name}</small> : null}
+                          </span>
+                          {isDay ? <time>{timeRange(item.visit_time)}</time> : null}
+                          {!isDay ? (
+                            <span className="ex-chip-tip" role="tooltip">
+                              <strong>{item.customer_name || 'Клиент'}</strong>
+                              <em>{item.status === 'Отменён' ? 'Отменена' : item.title}</em>
+                              {item.staff_name ? <small>Мастер: {item.staff_name}</small> : null}
+                              <small>{item.status}</small>
+                            </span>
+                          ) : null}
+                        </button>
+                      );
+                    })}
                     {canAdd ? (
                       <button
                         type="button"
-                        className="ex-week-add"
+                        className={`ex-week-add${isDay ? '' : ' is-compact'}`}
                         onClick={() => onSlotClick?.(day.iso, hour)}
+                        title="Добавить запись к другому мастеру"
+                        aria-label="Добавить запись к другому мастеру"
                       >
-                        + ещё мастер
+                        {isDay ? '+ ещё мастер' : '+'}
                       </button>
                     ) : null}
                   </div>
