@@ -3,13 +3,8 @@ import { Link } from 'react-router-dom';
 import ServiceSuggest from './ServiceSuggest';
 import ReviewsModal from './ReviewsModal';
 import { useLocation } from '../contexts/LocationContext';
+import { useReference } from '../contexts/ReferenceContext';
 import { canBookOnline } from '../services/orders';
-
-const BOOKING_TIMES = [
-  '09:00', '10:00', '11:00', '12:00',
-  '13:00', '14:00', '15:00', '16:00',
-  '17:00', '18:00', '19:00',
-];
 
 function LocationIcon() {
   return (
@@ -177,6 +172,7 @@ export default function ServiceCardModal({
   const [deletingReviewId, setDeletingReviewId] = useState(null);
   const [reviewsOpen, setReviewsOpen] = useState(focus === 'reviews');
   const { distanceTo, formatDistance } = useLocation();
+  const { bookingSlots: bookingTimes } = useReference();
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const distanceKm = distanceTo?.(executor);
@@ -561,7 +557,7 @@ export default function ServiceCardModal({
                       required
                     >
                       <option value="">Выберите время</option>
-                      {BOOKING_TIMES.map((time) => (
+                      {bookingTimes.map((time) => (
                         <option key={time} value={time}>{time}</option>
                       ))}
                     </select>

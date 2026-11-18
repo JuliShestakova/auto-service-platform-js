@@ -20,16 +20,24 @@ from app.auth.refresh_tokens import (
 from app.auth.roles import require_role
 from app.auth.security import hash_password, verify_password
 from app.db.database import get_db
+from app.db.reference_seed import ensure_reference_data
 from app.db.schema import ensure_schema
 from app.middleware.request_logging import RequestLoggingMiddleware
 from app.models import (
+    BookingTimeSlot,
     Car,
+    City,
     Executor,
+    FeaturedService,
     Notification,
     Order,
     Review,
+    ServiceAlias,
     ServiceCatalogItem,
+    ServiceCategory,
+    ServiceSearchSynonym,
     Staff,
+    StaffPosition,
     User,
 )
 from app.schemas.auth import (
@@ -45,13 +53,33 @@ from app.schemas.order import OrderCreate, OrderResponse, OrderUpdate
 from app.schemas.staff import StaffCreate, StaffResponse, StaffUpdate
 from app.schemas.profile import ExecutorProfileUpdate, ProfileUpdate
 from app.schemas.review import ReviewCreate, ReviewResponse
+from app.schemas.city import CityResponse
+from app.schemas.reference import (
+    BookingTimeSlotResponse,
+    FeaturedServiceResponse,
+    ServiceAliasResponse,
+    ServiceCategoryResponse,
+    ServiceSearchSynonymResponse,
+    StaffPositionResponse,
+)
 from app.schemas.service_catalog import ServiceCatalogResponse
 from app.schemas.user import UserResponse
+
+
+async def _default_city_name(db: AsyncSession) -> str:
+    default_city = await db.scalar(
+        select(City.name).where(City.is_default.is_(True)).limit(1)
+    )
+    if default_city:
+        return default_city
+    fallback = await db.scalar(select(City.name).order_by(City.name).limit(1))
+    return fallback or ""
 
 
 @asynccontextmanager
 async def lifespan(_app):
     await ensure_schema()
+    await ensure_reference_data()
     yield
 
 
@@ -89,9 +117,16 @@ async def get_users(
     return result.scalars().all()
 
 
+@app.get("/cities", response_model=list[CityResponse])
+async def list_cities(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(City).order_by(City.name))
+    return result.scalars().all()
+
+
 @app.get("/services", response_model=list[ServiceCatalogResponse])
 async def list_service_catalog(
     q: str | None = None,
+    featured: bool | None = None,
     db: AsyncSession = Depends(get_db),
 ):
     query = select(ServiceCatalogItem).order_by(
@@ -100,7 +135,72 @@ async def list_service_catalog(
     )
     if q:
         query = query.where(ServiceCatalogItem.name.ilike(f"%{q.strip()}%"))
+    if featured is True:
+        query = query.where(ServiceCatalogItem.is_featured.is_(True))
     result = await db.execute(query)
+    return result.scalars().all()
+
+
+@app.get("/staff-positions", response_model=list[StaffPositionResponse])
+async def list_staff_positions(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(StaffPosition).order_by(StaffPosition.sort_order, StaffPosition.name)
+    )
+    return result.scalars().all()
+
+
+@app.get("/service-aliases", response_model=list[ServiceAliasResponse])
+async def list_service_aliases(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(ServiceAlias).order_by(ServiceAlias.sort_order, ServiceAlias.name)
+    )
+    return result.scalars().all()
+
+
+@app.get(
+    "/service-search-synonyms",
+    response_model=list[ServiceSearchSynonymResponse],
+)
+async def list_service_search_synonyms(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(ServiceSearchSynonym).order_by(
+            ServiceSearchSynonym.sort_order,
+            ServiceSearchSynonym.id,
+        )
+    )
+    return result.scalars().all()
+
+
+@app.get("/booking-slots", response_model=list[BookingTimeSlotResponse])
+async def list_booking_slots(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(BookingTimeSlot).order_by(
+            BookingTimeSlot.sort_order,
+            BookingTimeSlot.time,
+        )
+    )
+    return result.scalars().all()
+
+
+@app.get("/service-categories", response_model=list[ServiceCategoryResponse])
+async def list_service_categories(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(ServiceCategory).order_by(
+            ServiceCategory.sort_order,
+            ServiceCategory.name,
+        )
+    )
+    return result.scalars().all()
+
+
+@app.get("/featured-services", response_model=list[FeaturedServiceResponse])
+async def list_featured_services(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(FeaturedService).order_by(
+            FeaturedService.sort_order,
+            FeaturedService.name,
+        )
+    )
     return result.scalars().all()
 
 
@@ -142,6 +242,19 @@ async def register(
             detail="User with this email already exists",
         )
 
+    default_city = await _default_city_name(db)
+
+    if data.role == "executor":
+        shop_city = (data.city or "").strip()
+        city_exists = await db.scalar(
+            select(City.id).where(City.name == shop_city).limit(1)
+        )
+        if not city_exists:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Выберите город из списка",
+            )
+
     user = User(
         name=data.name,
         email=data.email,
@@ -153,7 +266,7 @@ async def register(
     await db.refresh(user)
 
     if user.role == "executor":
-        shop_city = (data.city or "").strip() or "Краснодар"
+        shop_city = (data.city or "").strip() or default_city
         shop_address = (data.address or "").strip() or "Адрес не указан"
         shop_hours = (data.hours or "").strip() or "Уточняется"
         shop_phone = (data.phone or "").strip() or None
@@ -1061,7 +1174,7 @@ async def get_my_executor(
             reviews=0,
             price="по запросу",
             address="Адрес не указан",
-            city="Краснодар",
+            city=await _default_city_name(db),
             status="На проверке",
             hours="Уточняется",
             description="Профиль автосервиса ещё не заполнен.",

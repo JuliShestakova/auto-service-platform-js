@@ -53,7 +53,7 @@ SCHEMA_STATEMENTS = (
     """,
     """
     ALTER TABLE executors
-    ADD COLUMN IF NOT EXISTS city VARCHAR(100) NOT NULL DEFAULT 'Краснодар'
+    ADD COLUMN IF NOT EXISTS city VARCHAR(100) NOT NULL DEFAULT ''
     """,
     """
     CREATE TABLE IF NOT EXISTS reviews (
@@ -76,8 +76,18 @@ SCHEMA_STATEMENTS = (
     CREATE TABLE IF NOT EXISTS service_catalog (
         id SERIAL PRIMARY KEY,
         category VARCHAR(120) NOT NULL,
-        name VARCHAR(200) NOT NULL UNIQUE
+        name VARCHAR(200) NOT NULL UNIQUE,
+        is_featured BOOLEAN NOT NULL DEFAULT FALSE,
+        image_key VARCHAR(80)
     )
+    """,
+    """
+    ALTER TABLE service_catalog
+    ADD COLUMN IF NOT EXISTS is_featured BOOLEAN NOT NULL DEFAULT FALSE
+    """,
+    """
+    ALTER TABLE service_catalog
+    ADD COLUMN IF NOT EXISTS image_key VARCHAR(80)
     """,
     """
     CREATE INDEX IF NOT EXISTS ix_service_catalog_category
@@ -86,6 +96,52 @@ SCHEMA_STATEMENTS = (
     """
     CREATE INDEX IF NOT EXISTS ix_service_catalog_name
     ON service_catalog (name)
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS staff_positions (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(200) NOT NULL UNIQUE,
+        sort_order INTEGER NOT NULL DEFAULT 0
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS service_aliases (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(200) NOT NULL UNIQUE,
+        sort_order INTEGER NOT NULL DEFAULT 0
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS service_search_synonyms (
+        id SERIAL PRIMARY KEY,
+        keys JSONB NOT NULL,
+        hint VARCHAR(200) NOT NULL,
+        sort_order INTEGER NOT NULL DEFAULT 0
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS booking_time_slots (
+        id SERIAL PRIMARY KEY,
+        time VARCHAR(5) NOT NULL UNIQUE,
+        sort_order INTEGER NOT NULL DEFAULT 0
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS service_categories (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(120) NOT NULL UNIQUE,
+        short_label VARCHAR(80) NOT NULL,
+        icon VARCHAR(40) NOT NULL DEFAULT 'more',
+        sort_order INTEGER NOT NULL DEFAULT 0
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS featured_services (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(200) NOT NULL UNIQUE,
+        image_key VARCHAR(80) NOT NULL,
+        sort_order INTEGER NOT NULL DEFAULT 0
+    )
     """,
     """
     CREATE TABLE IF NOT EXISTS staff (
@@ -154,7 +210,25 @@ SCHEMA_STATEMENTS = (
     ALTER TABLE staff
     ALTER COLUMN position TYPE VARCHAR(800)
     """,
+    """
+    CREATE TABLE IF NOT EXISTS cities (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        name_genitive VARCHAR(120) NOT NULL DEFAULT '',
+        latitude DOUBLE PRECISION NOT NULL,
+        longitude DOUBLE PRECISION NOT NULL,
+        is_default BOOLEAN NOT NULL DEFAULT FALSE
+    )
+    """,
+    """
+    ALTER TABLE cities
+    ADD COLUMN IF NOT EXISTS name_genitive VARCHAR(120) NOT NULL DEFAULT ''
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_cities_name ON cities (name)
+    """,
 )
+
 
 
 async def ensure_schema() -> None:

@@ -1,4 +1,4 @@
-from sqlalchemy import String
+from sqlalchemy import Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.database import Base
@@ -10,3 +10,5 @@ class ServiceCatalogItem(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     category: Mapped[str] = mapped_column(String(120), index=True)
     name: Mapped[str] = mapped_column(String(200), unique=True, index=True)
+    is_featured: Mapped[bool] = mapped_column(Boolean, default=False)
+    image_key: Mapped[str | None] = mapped_column(String(80), nullable=True)

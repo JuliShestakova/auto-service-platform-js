@@ -1,0 +1,465 @@
+/* =========================================================
+   ТЁМНАЯ ТЕМА
+   Светлая палитра в :root не меняется — только data-theme="dark"
+   ========================================================= */
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #221c19;
+  --surface: #2c2521;
+  --elevated: #352d28;
+  --panel: #2a2320;
+  --soft: #3a322c;
+
+  --text: #f7f0ea;
+  --muted: #c2b4aa;
+
+  --accent: #e86a52;
+  --accent-dark: #f08772;
+  --accent-light: #4a322a;
+
+  --border: #4a4038;
+  --border-strong: #5a4e45;
+  --input-bg: #3a322c;
+  --input-border: #5a4e45;
+
+  --header-bg: #221c19;
+  --header-bg-scrolled: #2a2320;
+  --header-border: #4a4038;
+  --header-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+
+  --overlay: rgba(12, 9, 8, 0.55);
+  --shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
+  --shadow-strong: 0 24px 70px rgba(0, 0, 0, 0.38);
+
+  --scrollbar-track: #2a2320;
+  --scrollbar-thumb: #7a6256;
+  --scrollbar-thumb-hover: #94766a;
+
+  --success-bg: #2a4334;
+  --success-text: #9fdbb4;
+  --warning-bg: #4a3624;
+  --warning-text: #f2bc86;
+  --info-bg: #2a3a4d;
+  --info-text: #9bc0ea;
+  --danger-bg: #4a302a;
+  --danger-text: #f2aea4;
+}
+
+/* ---------- Глобальные поверхности ---------- */
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] .home-page,
+html[data-theme="dark"] .search-page,
+html[data-theme="dark"] .customer-page,
+html[data-theme="dark"] .role-dashboard-page {
+  background: var(--bg);
+  color: var(--text);
+}
+
+html[data-theme="dark"] .site-header {
+  background: var(--header-bg);
+}
+
+html[data-theme="dark"] .site-header.is-scrolled {
+  background: var(--header-bg-scrolled);
+  border-bottom-color: var(--header-border);
+  box-shadow: var(--header-shadow);
+}
+
+/* ---------- Шапка / меню ---------- */
+
+html[data-theme="dark"] .nav-button,
+html[data-theme="dark"] .auth-link,
+html[data-theme="dark"] .logo,
+html[data-theme="dark"] .logo span {
+  color: var(--text);
+}
+
+html[data-theme="dark"] .header-capsule,
+html[data-theme="dark"] .header-profile-menu,
+html[data-theme="dark"] .ex-notice-drop,
+html[data-theme="dark"] .city-select,
+html[data-theme="dark"] .city-select-menu,
+html[data-theme="dark"] .executor-cab-search,
+html[data-theme="dark"] .executor-cab-bell {
+  background: var(--elevated) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+  box-shadow: var(--shadow);
+}
+
+html[data-theme="dark"] .header-profile-info strong,
+html[data-theme="dark"] .header-profile-item,
+html[data-theme="dark"] .ex-notice-item b,
+html[data-theme="dark"] .ex-notice-drop strong {
+  color: var(--text);
+}
+
+html[data-theme="dark"] .header-profile-info span,
+html[data-theme="dark"] .ex-notice-item span,
+html[data-theme="dark"] .ex-notice-item time,
+html[data-theme="dark"] .ex-notice-drop p {
+  color: var(--muted);
+}
+
+html[data-theme="dark"] .header-profile-divider {
+  background: var(--border);
+}
+
+html[data-theme="dark"] .header-profile-item:hover,
+html[data-theme="dark"] .ex-notice-item:hover,
+html[data-theme="dark"] .city-select-option:hover {
+  background: var(--accent-light);
+}
+
+html[data-theme="dark"] .executor-cab-search input {
+  background: transparent;
+  color: var(--text);
+}
+
+html[data-theme="dark"] .executor-cab-search input::placeholder {
+  color: var(--muted);
+}
+
+/* ---------- Модалки / формы ---------- */
+
+html[data-theme="dark"] .auth-modal-overlay,
+html[data-theme="dark"] .booking-auth-modal-backdrop,
+html[data-theme="dark"] .booking-overlay,
+html[data-theme="dark"] .confirm-modal-overlay,
+html[data-theme="dark"] .service-modal-overlay {
+  background: var(--overlay);
+}
+
+html[data-theme="dark"] .auth-modal,
+html[data-theme="dark"] .booking-auth-modal,
+html[data-theme="dark"] .booking-overlay-panel,
+html[data-theme="dark"] .confirm-modal,
+html[data-theme="dark"] .service-details-card,
+html[data-theme="dark"] .booking-card {
+  background: var(--elevated) !important;
+  border-color: var(--border) !important;
+  color: var(--text);
+  box-shadow: var(--shadow-strong);
+}
+
+html[data-theme="dark"] .auth-modal h1,
+html[data-theme="dark"] .auth-modal h2,
+html[data-theme="dark"] .auth-modal label,
+html[data-theme="dark"] .booking-card h3,
+html[data-theme="dark"] .confirm-modal h3,
+html[data-theme="dark"] .service-details-card h2,
+html[data-theme="dark"] .service-details-card h3 {
+  color: var(--text);
+}
+
+html[data-theme="dark"] .auth-field input,
+html[data-theme="dark"] .auth-field select,
+html[data-theme="dark"] .booking-field input,
+html[data-theme="dark"] .booking-field select,
+html[data-theme="dark"] .hours-range input,
+html[data-theme="dark"] .filter-select-trigger,
+html[data-theme="dark"] .filter-select-menu,
+html[data-theme="dark"] .filter-select-search,
+html[data-theme="dark"] .customer-settings-card input,
+html[data-theme="dark"] .role-settings-stack input,
+html[data-theme="dark"] .role-settings-stack textarea,
+html[data-theme="dark"] .role-settings-stack select,
+html[data-theme="dark"] .cancel-reason-field input,
+html[data-theme="dark"] .cancel-reason-field textarea {
+  background: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text) !important;
+}
+
+html[data-theme="dark"] .auth-field small,
+html[data-theme="dark"] .booking-description,
+html[data-theme="dark"] .booking-label,
+html[data-theme="dark"] .review-login-hint,
+html[data-theme="dark"] .role-empty-note {
+  color: var(--muted);
+}
+
+html[data-theme="dark"] .auth-modal-close,
+html[data-theme="dark"] .booking-overlay-close,
+html[data-theme="dark"] .booking-auth-close {
+  background: var(--soft);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+/* ---------- Карточки / кабинеты ---------- */
+
+html[data-theme="dark"] .role-card,
+html[data-theme="dark"] .role-header,
+html[data-theme="dark"] .role-side,
+html[data-theme="dark"] .role-panel,
+html[data-theme="dark"] .customer-car-card,
+html[data-theme="dark"] .customer-settings-card,
+html[data-theme="dark"] .customer-order-card,
+html[data-theme="dark"] .order-card,
+html[data-theme="dark"] .request-card,
+html[data-theme="dark"] .shop-card,
+html[data-theme="dark"] .work-card,
+html[data-theme="dark"] .map-card,
+html[data-theme="dark"] .map-float-card,
+html[data-theme="dark"] .map-list,
+html[data-theme="dark"] .search-bar,
+html[data-theme="dark"] .search-bar.catalog-search,
+html[data-theme="dark"] .owner-banner,
+html[data-theme="dark"] .site-footer,
+html[data-theme="dark"] .ex-week,
+html[data-theme="dark"] .ex-chip-tip,
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .booking-detail-modal {
+  background: var(--elevated) !important;
+  border-color: var(--border) !important;
+  color: var(--text);
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .owner-banner {
+  background:
+    linear-gradient(135deg, #3a2f28 0%, #4a382e 100%) !important;
+}
+
+/* ---------- Кабинет заказчика ---------- */
+
+html[data-theme="dark"] .customer-welcome h1,
+html[data-theme="dark"] .customer-section-header h2,
+html[data-theme="dark"] .cab-toolbar h2,
+html[data-theme="dark"] .cab-card-head h2,
+html[data-theme="dark"] .cab-booking-info h3,
+html[data-theme="dark"] .cab-booking-card-main h3,
+html[data-theme="dark"] .cab-empty h3,
+html[data-theme="dark"] .cab-car-filled h3,
+html[data-theme="dark"] .cab-stat strong,
+html[data-theme="dark"] .order-content h3 {
+  color: var(--text) !important;
+}
+
+html[data-theme="dark"] .cab-search,
+html[data-theme="dark"] .cab-stat,
+html[data-theme="dark"] .cab-card,
+html[data-theme="dark"] .cab-booking-card,
+html[data-theme="dark"] .cab-fav-card,
+html[data-theme="dark"] .customer-menu-card,
+html[data-theme="dark"] .customer-empty-card,
+html[data-theme="dark"] .customer-car-card,
+html[data-theme="dark"] .customer-settings-card,
+html[data-theme="dark"] .customer-auth-card {
+  background: var(--elevated) !important;
+  border-color: var(--border) !important;
+  color: var(--text);
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .customer-outline-button,
+html[data-theme="dark"] .cab-booking-card-cancel,
+html[data-theme="dark"] .cab-fav-review {
+  background: var(--soft) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text) !important;
+}
+
+html[data-theme="dark"] .customer-outline-button:hover,
+html[data-theme="dark"] .cab-booking-card-cancel:hover,
+html[data-theme="dark"] .cab-fav-review:hover {
+  background: var(--accent-light) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+html[data-theme="dark"] .cab-booking-card-when {
+  background: var(--accent-light);
+  color: #f0b9a8;
+}
+
+html[data-theme="dark"] .cab-fav-reviewed,
+html[data-theme="dark"] .customer-car-details > div {
+  background: var(--soft) !important;
+  color: var(--muted);
+}
+
+html[data-theme="dark"] .cab-booking-cover,
+html[data-theme="dark"] .cab-booking-card-media {
+  background: var(--soft);
+}
+
+html[data-theme="dark"] .cab-muted,
+html[data-theme="dark"] .cab-stat small,
+html[data-theme="dark"] .cab-booking-meta li,
+html[data-theme="dark"] .cab-booking-card-meta,
+html[data-theme="dark"] .cab-fav-city,
+html[data-theme="dark"] .cab-fav-meta,
+html[data-theme="dark"] .customer-welcome > p,
+html[data-theme="dark"] .customer-section-header p:last-child {
+  color: var(--muted) !important;
+}
+
+html[data-theme="dark"] .cab-shop-link,
+html[data-theme="dark"] .cab-shop-link-text {
+  color: var(--text);
+}
+
+html[data-theme="dark"] .service-suggest-menu,
+html[data-theme="dark"] .cab-search .service-suggest-menu {
+  background: var(--elevated) !important;
+  border-color: var(--border) !important;
+  color: var(--text);
+}
+
+html[data-theme="dark"] .service-suggest-option:hover,
+html[data-theme="dark"] .service-suggest-option.is-active {
+  background: var(--accent-light) !important;
+}
+
+html[data-theme="dark"] .role-side-link,
+html[data-theme="dark"] .role-side-link span,
+html[data-theme="dark"] .shop-card strong,
+html[data-theme="dark"] .work-card strong,
+html[data-theme="dark"] .map-card strong,
+html[data-theme="dark"] .search-title h1,
+html[data-theme="dark"] .popular-heading h2,
+html[data-theme="dark"] .owner-banner h2,
+html[data-theme="dark"] .site-footer h4 {
+  color: var(--text);
+}
+
+html[data-theme="dark"] .role-side-link:hover,
+html[data-theme="dark"] .role-side-link.active {
+  background: var(--accent-light) !important;
+  color: var(--accent);
+}
+
+html[data-theme="dark"] .shop-card p,
+html[data-theme="dark"] .work-card p,
+html[data-theme="dark"] .map-card p,
+html[data-theme="dark"] .owner-banner p,
+html[data-theme="dark"] .owner-banner li,
+html[data-theme="dark"] .site-footer a,
+html[data-theme="dark"] .site-footer p {
+  color: var(--muted);
+}
+
+html[data-theme="dark"] .search-page {
+  background:
+    radial-gradient(ellipse 80% 40% at 10% 0%, #3a2f28 0%, transparent 55%),
+    radial-gradient(ellipse 60% 35% at 90% 8%, #322823 0%, transparent 50%),
+    var(--bg) !important;
+}
+
+html[data-theme="dark"] .search-bar input,
+html[data-theme="dark"] .search-bar select,
+html[data-theme="dark"] .catalog-search input {
+  background: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text) !important;
+}
+
+/* ---------- Расписание ---------- */
+
+html[data-theme="dark"] .ex-week-cell {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+html[data-theme="dark"] .ex-week-cell.is-weekend {
+  background: #261f1b;
+}
+
+html[data-theme="dark"] .ex-week-cell.is-today {
+  background: #322824;
+}
+
+html[data-theme="dark"] .ex-week-cell.is-now {
+  background: #3a2c26;
+}
+
+html[data-theme="dark"] .ex-week-free {
+  color: #8a7a70;
+}
+
+html[data-theme="dark"] .ex-week-add {
+  border-color: var(--border-strong);
+  color: var(--accent);
+}
+
+html[data-theme="dark"] .ex-week-add:hover,
+html[data-theme="dark"] .ex-week-cell:hover .ex-week-free {
+  background: var(--accent-light);
+  border-color: var(--border-strong);
+}
+
+html[data-theme="dark"] .ex-chip.is-ok {
+  background: linear-gradient(180deg, #24382c, #1d2f25);
+  color: var(--success-text);
+}
+
+html[data-theme="dark"] .ex-chip.is-wait {
+  background: linear-gradient(180deg, #3a2c1f, #322418);
+  color: var(--warning-text);
+}
+
+html[data-theme="dark"] .ex-chip.is-work {
+  background: linear-gradient(180deg, #243448, #1d2a3a);
+  color: var(--info-text);
+}
+
+html[data-theme="dark"] .ex-chip.is-cancel,
+html[data-theme="dark"] .ex-chip.is-muted {
+  background: linear-gradient(180deg, #3a2824, #2f211e);
+  color: var(--danger-text);
+}
+
+html[data-theme="dark"] .ex-chip-tip {
+  background: var(--elevated);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+html[data-theme="dark"] .ex-chip-tip em,
+html[data-theme="dark"] .ex-chip-tip small {
+  color: var(--muted);
+}
+
+/* ---------- Кнопки / акценты ---------- */
+
+html[data-theme="dark"] .theme-toggle {
+  background: var(--elevated);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+html[data-theme="dark"] .theme-toggle:hover {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+html[data-theme="dark"] .booking-login-hint {
+  background: var(--accent-light);
+  color: #f0b9a8;
+}
+
+html[data-theme="dark"] .password-rules li.is-pending {
+  color: var(--muted);
+}
+
+html[data-theme="dark"] .password-rules li.is-ok,
+html[data-theme="dark"] .password-match-ok {
+  color: var(--success-text) !important;
+}
+
+html[data-theme="dark"] .leaflet-container {
+  background: #1b1613;
+}
+
+html[data-theme="dark"] .leaflet-control-zoom a,
+html[data-theme="dark"] .leaflet-bar {
+  background: var(--elevated) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}

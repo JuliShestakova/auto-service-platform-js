@@ -23,10 +23,10 @@ target_metadata = Base.metadata
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
 
-    url = os.getenv(
-        "DATABASE_URL",
-        "postgresql+asyncpg://postgres:postgres@db:5432/find_service",
-    )
+    url = os.getenv("DATABASE_URL")
+    if not url:
+        raise RuntimeError("DATABASE_URL is not set")
+
 
     context.configure(
         url=url,
@@ -44,10 +44,10 @@ def run_migrations_online() -> None:
 
     configuration = config.get_section(config.config_ini_section)
 
-    configuration["sqlalchemy.url"] = os.getenv(
-        "DATABASE_URL",
-        "postgresql+asyncpg://postgres:postgres@db:5432/find_service",
-    )
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        raise RuntimeError("DATABASE_URL is not set")
+    configuration["sqlalchemy.url"] = database_url
 
     connectable = async_engine_from_config(
         configuration,

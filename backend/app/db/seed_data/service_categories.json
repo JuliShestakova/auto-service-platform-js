@@ -1,0 +1,22 @@
+[
+  { "name": "Техническое обслуживание", "short_label": "ТО", "icon": "to" },
+  { "name": "Двигатель", "short_label": "Двигатель", "icon": "engine" },
+  { "name": "Трансмиссия", "short_label": "Трансмиссия", "icon": "trans" },
+  { "name": "Диагностика", "short_label": "Диагностика", "icon": "diag" },
+  { "name": "Топливная система", "short_label": "Топливная система", "icon": "fuel" },
+  { "name": "Тормозная система", "short_label": "Тормозная система", "icon": "brake" },
+  { "name": "Подвеска и ходовая часть", "short_label": "Ходовая", "icon": "chassis" },
+  { "name": "Рулевое управление", "short_label": "Рулевое", "icon": "steer" },
+  { "name": "Система охлаждения", "short_label": "Охлаждение", "icon": "cool" },
+  { "name": "Выхлопная система", "short_label": "Выхлоп", "icon": "exhaust" },
+  { "name": "Автоэлектрика", "short_label": "Электрика", "icon": "electro" },
+  { "name": "Кондиционер и отопление", "short_label": "Кондиционер", "icon": "ac" },
+  { "name": "Шиномонтаж и колёса", "short_label": "Шиномонтаж", "icon": "tire" },
+  { "name": "Развал-схождение", "short_label": "Развал", "icon": "align" },
+  { "name": "Кузовной ремонт и покраска", "short_label": "Кузов", "icon": "body" },
+  { "name": "Автомобильные стёкла", "short_label": "Стёкла", "icon": "glass" },
+  { "name": "Мойка и детейлинг", "short_label": "Мойка", "icon": "wash" },
+  { "name": "ГБО", "short_label": "ГБО", "icon": "gas" },
+  { "name": "Дополнительные услуги", "short_label": "Доп. услуги", "icon": "more" },
+  { "name": "Другое", "short_label": "Другое", "icon": "more" }
+]

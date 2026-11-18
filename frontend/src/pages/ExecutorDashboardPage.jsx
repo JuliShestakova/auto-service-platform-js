@@ -5,10 +5,12 @@ import SiteHeader from '../components/SiteHeader';
 import HoursRangeInputs from '../components/HoursRangeInputs';
 import FilterSelect from '../components/FilterSelect';
 import PositionPicker from '../components/PositionPicker';
-import { joinPositions } from '../data/staffPositions';
-import { SERVICE_GROUPS } from '../data/serviceCatalog';
+import { useReference } from '../contexts/ReferenceContext';
+import { joinPositions } from '../utils/staffPositions';
 import { resolveBestService } from '../utils/fuzzyService';
-import { CITIES, DEFAULT_CITY } from '../data/cities';
+import { DEFAULT_CITY } from '../data/cities';
+import { useCity } from '../contexts/CityContext';
+import { groupServicesByCategory, listServiceCatalog } from '../services/catalog';
 import {
   isCompleteHoursRange,
   isValidHoursRange,
@@ -30,10 +32,6 @@ const SHOP_IMAGES = [
 ];
 
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-const HOURS = [
-  '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
-  '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00',
-];
 const CALENDAR_STATUSES = new Set([
   'Ожидает подтверждения',
   'Запланирован',
@@ -50,19 +48,13 @@ function catalogServiceName(item) {
 }
 
 function mergeCatalog(apiItems = [], profileServices = []) {
-  const groups = SERVICE_GROUPS.map((group) => ({
+  const groups = groupServicesByCategory(apiItems).map((group) => ({
     category: group.category,
     items: [...group.items],
   }));
   const known = new Set(groups.flatMap((group) => group.items));
   const extras = [];
 
-  for (const item of apiItems) {
-    if (item?.name && !known.has(item.name)) {
-      extras.push(item.name);
-      known.add(item.name);
-    }
-  }
   for (const row of profileServices || []) {
     const name = catalogServiceName(row);
     if (name && !known.has(name)) {
@@ -368,7 +360,10 @@ function Icon({ type }) {
 
 export default function ExecutorDashboardPage() {
   const { user, logout, authFetch, patchUser } = useAuth();
+  const { cities, defaultCity } = useCity();
+  const { bookingSlots } = useReference();
   const navigate = useNavigate();
+  const hours = bookingSlots;
 
   const [section, setSection] = useState('overview');
   const [executorOrders, setExecutorOrders] = useState([]);
@@ -403,14 +398,14 @@ export default function ExecutorDashboardPage() {
     name: '',
     phone: '',
     address: '',
-    city: DEFAULT_CITY,
+    city: defaultCity || DEFAULT_CITY,
     hoursFrom: '',
     hoursTo: '',
     description: '',
     status: 'Открыто',
   });
   const [profileError, setProfileError] = useState('');
-  const [catalogGroups, setCatalogGroups] = useState(SERVICE_GROUPS);
+  const [catalogGroups, setCatalogGroups] = useState([]);
   const [pickedServices, setPickedServices] = useState([]);
   const [servicesSaving, setServicesSaving] = useState(false);
   const [servicesError, setServicesError] = useState('');
@@ -477,9 +472,7 @@ export default function ExecutorDashboardPage() {
   useEffect(() => {
     const loadCatalog = async () => {
       try {
-        const response = await fetch('/api/services');
-        if (!response.ok) return;
-        const data = await response.json();
+        const data = await listServiceCatalog();
         setCatalogGroups(mergeCatalog(data, profile?.services));
       } catch {
         setCatalogGroups(mergeCatalog([], profile?.services));
@@ -1433,7 +1426,7 @@ export default function ExecutorDashboardPage() {
                         value={profileDraft.city}
                         onChange={(event) => setProfileDraft((d) => ({ ...d, city: event.target.value }))}
                       >
-                        {CITIES.map((item) => (
+                        {(cities.length ? cities : [DEFAULT_CITY]).map((item) => (
                           <option key={item} value={item}>{item}</option>
                         ))}
                       </select>
@@ -1816,7 +1809,7 @@ export default function ExecutorDashboardPage() {
                       });
                     }}
                   >
-                    {HOURS.map((hour) => (
+                    {hours.map((hour) => (
                       <option key={hour} value={hour}>{hour}</option>
                     ))}
                   </select>
@@ -2065,6 +2058,7 @@ function OverviewBoard({
   onOpenUpcoming,
   onNewBooking,
 }) {
+  const { bookingSlots: hours } = useReference();
   const days = weekDays(selectedDay);
   const weekIsos = new Set(days.map((day) => day.iso));
   const staffLoad = staff.map((person) => {
@@ -2073,7 +2067,7 @@ function OverviewBoard({
       && weekIsos.has(item.visit_date)
       && item.status !== 'Отменён'
     )).length;
-    const max = Math.max(HOURS.length, 1);
+    const max = Math.max(hours.length, 1);
     return {
       ...person,
       count,
@@ -2259,6 +2253,7 @@ function WeekGrid({
   onOpenBooking,
   onSlotClick,
 }) {
+  const { bookingSlots: hours } = useReference();
   const scrollerRef = useRef(null);
   const firstHitRef = useRef(null);
   const isDay = days.length === 1;
@@ -2301,7 +2296,7 @@ function WeekGrid({
           </div>
         ))}
       </div>
-      {HOURS.map((hour) => (
+      {hours.map((hour) => (
         <div key={hour} className={`ex-week-row ${hour === nowHour ? 'is-now' : ''}`}>
           <span>{hour}</span>
           {days.map((day) => {

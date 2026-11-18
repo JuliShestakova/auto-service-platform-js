@@ -41,20 +41,6 @@ def normalize_shop_hours(value: str | None) -> str | None:
     return text
 
 
-ALLOWED_CITIES = {
-    "Москва",
-    "Санкт-Петербург",
-    "Новосибирск",
-    "Екатеринбург",
-    "Казань",
-    "Нижний Новгород",
-    "Ростов-на-Дону",
-    "Краснодар",
-    "Самара",
-    "Сочи",
-}
-
-
 def _phone_digits(value: str) -> str:
     return PHONE_DIGITS_RE.sub("", value or "")
 
@@ -133,7 +119,7 @@ class RegisterRequest(BaseModel):
                 raise ValueError("Название автосервиса содержит недопустимые символы")
 
             city = (self.city or "").strip()
-            if city not in ALLOWED_CITIES:
+            if not city:
                 raise ValueError("Выберите город из списка")
 
             address = (self.address or "").strip()

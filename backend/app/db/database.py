@@ -3,10 +3,9 @@ from sqlalchemy.orm import DeclarativeBase
 import os
 
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+asyncpg://postgres:postgres@db:5432/find_service",
-)
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is not set")
 
 engine = create_async_engine(
     DATABASE_URL,

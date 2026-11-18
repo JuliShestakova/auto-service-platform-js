@@ -12,7 +12,6 @@ import FavoriteButton from '../components/FavoriteButton';
 import ServiceCardModal from '../components/ServiceCardModal';
 import ServiceSuggest from '../components/ServiceSuggest';
 import SiteHeader from '../components/SiteHeader';
-import { SERVICE_CATALOG } from '../data/serviceCatalog';
 import useFavorites from '../hooks/useFavorites';
 import { listServiceNames } from '../services/catalog';
 import { getExecutor, listExecutorReviews, listExecutors } from '../services/executors';
@@ -240,7 +239,7 @@ function CustomerDashboardPage({
   const [reviewError, setReviewError] = useState('');
   const [reviewSaving, setReviewSaving] = useState(false);
   const [deletingReviewId, setDeletingReviewId] = useState(null);
-  const [catalogNames, setCatalogNames] = useState(SERVICE_CATALOG);
+  const [catalogNames, setCatalogNames] = useState([]);
   const [workQuery, setWorkQuery] = useState('');
 
 

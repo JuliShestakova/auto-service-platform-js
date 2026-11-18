@@ -1,0 +1,1568 @@
+[
+  {
+    "category": "Техническое обслуживание",
+    "name": "Техническое обслуживание",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Техническое обслуживание",
+    "name": "Замена моторного масла",
+    "is_featured": true,
+    "image_key": "oil-change"
+  },
+  {
+    "category": "Техническое обслуживание",
+    "name": "Замена масляного фильтра",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Техническое обслуживание",
+    "name": "Замена воздушного фильтра",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Техническое обслуживание",
+    "name": "Замена салонного фильтра",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Техническое обслуживание",
+    "name": "Замена топливного фильтра",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Техническое обслуживание",
+    "name": "Замена свечей зажигания",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Техническое обслуживание",
+    "name": "Замена свечей накаливания",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Техническое обслуживание",
+    "name": "Замена приводного ремня",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Техническое обслуживание",
+    "name": "Замена роликов и натяжителей",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Техническое обслуживание",
+    "name": "Плановое техническое обслуживание",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Техническое обслуживание",
+    "name": "Замена охлаждающей жидкости",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Двигатель",
+    "name": "Замена ремня и роликов ГРМ",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Двигатель",
+    "name": "Замена цепи ГРМ",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Двигатель",
+    "name": "Замена прокладки клапанной крышки",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Двигатель",
+    "name": "Замена прокладки ГБЦ",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Двигатель",
+    "name": "Замена сальников двигателя",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Двигатель",
+    "name": "Замена опор двигателя",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Двигатель",
+    "name": "Замена масляного насоса",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Двигатель",
+    "name": "Замена поддона двигателя",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Двигатель",
+    "name": "Замена сальника коленвала",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Двигатель",
+    "name": "Ремонт головки блока цилиндров",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Двигатель",
+    "name": "Капитальный ремонт двигателя",
+    "is_featured": true,
+    "image_key": "engine-repair"
+  },
+  {
+    "category": "Двигатель",
+    "name": "Замена двигателя",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Двигатель",
+    "name": "Регулировка клапанов",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Двигатель",
+    "name": "Раскоксовка двигателя",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Двигатель",
+    "name": "Замена гидрокомпенсаторов",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Двигатель",
+    "name": "Замена фазорегулятора (VVT)",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Двигатель",
+    "name": "Замена маслосъёмных колпачков",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Двигатель",
+    "name": "Мойка двигателя",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена масла в МКПП",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена масла в АКПП",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена масла в вариаторе",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена масла в редукторе",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена ШРУСа наружного",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена ШРУСа внутреннего",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена пыльника ШРУСа наружного",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена пыльника ШРУСа внутреннего",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена приводного вала переднего",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена приводного вала заднего",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Диагностика коробки передач",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена сцепления",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена главного цилиндра сцепления",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена рабочего цилиндра сцепления",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Ремонт МКПП",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Ремонт АКПП",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Ремонт вариатора (CVT)",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Ремонт роботизированной коробки",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Ремонт карданного вала",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена крестовины карданного вала",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Ремонт редуктора",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена сальников коробки передач",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена коробки передач",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена фильтра АКПП",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Ремонт гидроблока АКПП",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена маховика",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена выжимного подшипника",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Регулировка сцепления",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Диагностика карданного вала",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена карданного вала",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена подвесного подшипника кардана",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Балансировка карданного вала",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Диагностика редуктора",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена редуктора",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Ремонт дифференциала",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена сальников редуктора",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Диагностика раздаточной коробки",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Ремонт раздаточной коробки",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена масла в раздаточной коробке",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Ремонт муфты полного привода",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Диагностика системы полного привода",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Адаптация АКПП",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Адаптация роботизированной коробки",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Трансмиссия",
+    "name": "Замена мехатроника DSG",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Диагностика",
+    "name": "Компьютерная диагностика",
+    "is_featured": true,
+    "image_key": "diagnostics"
+  },
+  {
+    "category": "Диагностика",
+    "name": "Комплексная компьютерная диагностика",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Диагностика",
+    "name": "Диагностика ходовой части",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Диагностика",
+    "name": "Диагностика тормозной системы",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Диагностика",
+    "name": "Диагностика автоэлектрики",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Диагностика",
+    "name": "Диагностика аккумулятора",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Диагностика",
+    "name": "Диагностика генератора",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Диагностика",
+    "name": "Диагностика стартера",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Диагностика",
+    "name": "Диагностика системы охлаждения",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Диагностика",
+    "name": "Диагностика системы зажигания",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Диагностика",
+    "name": "Поиск утечек технических жидкостей",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Диагностика",
+    "name": "Поиск стуков и посторонних шумов",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Диагностика",
+    "name": "Проверка автомобиля перед покупкой",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Диагностика",
+    "name": "Комплексный осмотр автомобиля",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Диагностика",
+    "name": "Замер компрессии",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Диагностика",
+    "name": "Эндоскопия цилиндров",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Тормозная система",
+    "name": "Замена передних тормозных колодок",
+    "is_featured": true,
+    "image_key": "brake-pads"
+  },
+  {
+    "category": "Тормозная система",
+    "name": "Замена задних тормозных колодок",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Тормозная система",
+    "name": "Замена тормозных дисков",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Тормозная система",
+    "name": "Замена тормозных барабанов",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Тормозная система",
+    "name": "Замена тормозного суппорта",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Тормозная система",
+    "name": "Ремонт тормозного суппорта",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Тормозная система",
+    "name": "Замена тормозных шлангов",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Тормозная система",
+    "name": "Замена тормозных трубок",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Тормозная система",
+    "name": "Замена главного тормозного цилиндра",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Тормозная система",
+    "name": "Замена тормозной жидкости",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Тормозная система",
+    "name": "Прокачка тормозной системы",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Тормозная система",
+    "name": "Ремонт стояночного тормоза",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Тормозная система",
+    "name": "Замена троса ручного тормоза",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Тормозная система",
+    "name": "Обслуживание направляющих суппортов",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Тормозная система",
+    "name": "Диагностика ABS",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Тормозная система",
+    "name": "Замена вакуумного усилителя тормозов",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Тормозная система",
+    "name": "Замена датчика ABS",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Подвеска и ходовая часть",
+    "name": "Замена амортизаторов",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Подвеска и ходовая часть",
+    "name": "Замена передних стоек",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Подвеска и ходовая часть",
+    "name": "Замена пружин подвески",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Подвеска и ходовая часть",
+    "name": "Замена опор амортизаторов",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Подвеска и ходовая часть",
+    "name": "Замена опорных подшипников",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Подвеска и ходовая часть",
+    "name": "Замена шаровых опор",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Подвеска и ходовая часть",
+    "name": "Замена сайлентблоков",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Подвеска и ходовая часть",
+    "name": "Замена рычагов подвески",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Подвеска и ходовая часть",
+    "name": "Замена стоек стабилизатора",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Подвеска и ходовая часть",
+    "name": "Замена втулок стабилизатора",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Подвеска и ходовая часть",
+    "name": "Замена ступичного подшипника",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Подвеска и ходовая часть",
+    "name": "Замена ступицы колеса",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Подвеска и ходовая часть",
+    "name": "Ремонт пневмоподвески",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Подвеска и ходовая часть",
+    "name": "Замена подрамника",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Подвеска и ходовая часть",
+    "name": "Замена балки задней подвески",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Рулевое управление",
+    "name": "Диагностика рулевого управления",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Рулевое управление",
+    "name": "Замена рулевой тяги",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Рулевое управление",
+    "name": "Замена рулевого наконечника",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Рулевое управление",
+    "name": "Замена рулевой рейки",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Рулевое управление",
+    "name": "Ремонт рулевой рейки",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Рулевое управление",
+    "name": "Замена насоса ГУР",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Рулевое управление",
+    "name": "Замена жидкости ГУР",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Рулевое управление",
+    "name": "Ремонт электроусилителя руля",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Рулевое управление",
+    "name": "Замена карданчика рулевого вала",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Система охлаждения",
+    "name": "Замена водяного насоса (помпы)",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Система охлаждения",
+    "name": "Замена термостата",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Система охлаждения",
+    "name": "Замена радиатора охлаждения",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Система охлаждения",
+    "name": "Замена патрубков системы охлаждения",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Система охлаждения",
+    "name": "Ремонт системы охлаждения",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Выхлопная система",
+    "name": "Замена турбокомпрессора",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Выхлопная система",
+    "name": "Ремонт турбокомпрессора",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Выхлопная система",
+    "name": "Диагностика выхлопной системы",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Выхлопная система",
+    "name": "Замена глушителя",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Выхлопная система",
+    "name": "Ремонт глушителя",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Выхлопная система",
+    "name": "Замена гофры глушителя",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Выхлопная система",
+    "name": "Замена катализатора",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Выхлопная система",
+    "name": "Проверка катализатора",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Выхлопная система",
+    "name": "Замена кислородного датчика",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Выхлопная система",
+    "name": "Замена сажевого фильтра",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Выхлопная система",
+    "name": "Очистка сажевого фильтра",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Выхлопная система",
+    "name": "Ремонт креплений выхлопной системы",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Выхлопная система",
+    "name": "Устранение утечек выхлопных газов",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Поиск неисправностей проводки",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Ремонт электропроводки",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Замена аккумулятора",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Проверка и зарядка аккумулятора",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Замена генератора",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Ремонт генератора",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Замена стартера",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Ремонт стартера",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Замена предохранителей и реле",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Ремонт фар и освещения",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Замена ламп",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Регулировка фар",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Ремонт стеклоподъёмников",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Ремонт центрального замка",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Ремонт стеклоочистителей",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Ремонт обогрева стёкол",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Установка парктроников",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Установка камеры заднего вида",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Установка видеорегистратора",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Установка сигнализации",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Ремонт / прошивка ЭБУ",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Программирование автомобильных ключей",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автоэлектрика",
+    "name": "Ремонт иммобилайзера",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кондиционер и отопление",
+    "name": "Диагностика кондиционера",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кондиционер и отопление",
+    "name": "Заправка автокондиционера",
+    "is_featured": true,
+    "image_key": "ac-refill"
+  },
+  {
+    "category": "Кондиционер и отопление",
+    "name": "Поиск утечки хладагента",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кондиционер и отопление",
+    "name": "Ремонт кондиционера",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кондиционер и отопление",
+    "name": "Замена компрессора кондиционера",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кондиционер и отопление",
+    "name": "Замена радиатора кондиционера",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кондиционер и отопление",
+    "name": "Замена испарителя",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кондиционер и отопление",
+    "name": "Замена вентилятора отопителя",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кондиционер и отопление",
+    "name": "Замена радиатора печки",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кондиционер и отопление",
+    "name": "Промывка радиатора отопителя",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кондиционер и отопление",
+    "name": "Антибактериальная обработка кондиционера",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кондиционер и отопление",
+    "name": "Очистка системы кондиционирования",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Шиномонтаж и колёса",
+    "name": "Сезонная смена колёс",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Шиномонтаж и колёса",
+    "name": "Шиномонтаж легкового автомобиля",
+    "is_featured": true,
+    "image_key": "tire-service"
+  },
+  {
+    "category": "Шиномонтаж и колёса",
+    "name": "Шиномонтаж внедорожника",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Шиномонтаж и колёса",
+    "name": "Шиномонтаж низкопрофильных шин",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Шиномонтаж и колёса",
+    "name": "Балансировка колёс",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Шиномонтаж и колёса",
+    "name": "Ремонт прокола шины",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Шиномонтаж и колёса",
+    "name": "Ремонт бокового пореза шины",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Шиномонтаж и колёса",
+    "name": "Установка заплаты на шину",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Шиномонтаж и колёса",
+    "name": "Правка стального диска",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Шиномонтаж и колёса",
+    "name": "Правка литого диска",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Шиномонтаж и колёса",
+    "name": "Ремонт колёсных дисков",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Шиномонтаж и колёса",
+    "name": "Проверка давления в шинах",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Шиномонтаж и колёса",
+    "name": "Установка датчиков TPMS",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Шиномонтаж и колёса",
+    "name": "Обслуживание датчиков TPMS",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Шиномонтаж и колёса",
+    "name": "Сезонное хранение шин",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Развал-схождение",
+    "name": "Развал-схождение передней оси",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Развал-схождение",
+    "name": "Развал-схождение 2 оси",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Развал-схождение",
+    "name": "Проверка геометрии подвески",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Развал-схождение",
+    "name": "Развал-схождение задней оси",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Топливная система",
+    "name": "Диагностика топливной системы",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Топливная система",
+    "name": "Чистка форсунок",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Топливная система",
+    "name": "Ультразвуковая чистка форсунок",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Топливная система",
+    "name": "Замена форсунок",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Топливная система",
+    "name": "Замена топливного насоса",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Топливная система",
+    "name": "Ремонт топливного насоса",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Топливная система",
+    "name": "Чистка дроссельной заслонки",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Топливная система",
+    "name": "Адаптация дроссельной заслонки",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Топливная система",
+    "name": "Промывка топливной системы",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Топливная система",
+    "name": "Ремонт топливных магистралей",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кузовной ремонт и покраска",
+    "name": "Локальный кузовной ремонт",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кузовной ремонт и покраска",
+    "name": "Рихтовка кузова",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кузовной ремонт и покраска",
+    "name": "Удаление вмятин без покраски",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кузовной ремонт и покраска",
+    "name": "Покраска детали кузова",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кузовной ремонт и покраска",
+    "name": "Локальная покраска",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кузовной ремонт и покраска",
+    "name": "Полная покраска автомобиля",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кузовной ремонт и покраска",
+    "name": "Полировка кузова",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кузовной ремонт и покраска",
+    "name": "Удаление царапин",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кузовной ремонт и покраска",
+    "name": "Антикоррозийная обработка",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кузовной ремонт и покраска",
+    "name": "Регулировка дверей",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кузовной ремонт и покраска",
+    "name": "Ремонт дверных замков",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кузовной ремонт и покраска",
+    "name": "Замена / покраска бампера",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Кузовной ремонт и покраска",
+    "name": "Антигравийная обработка днища",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автомобильные стёкла",
+    "name": "Замена лобового стекла",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автомобильные стёкла",
+    "name": "Ремонт сколов лобового стекла",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автомобильные стёкла",
+    "name": "Ремонт трещин стекла",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автомобильные стёкла",
+    "name": "Замена бокового стекла",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автомобильные стёкла",
+    "name": "Замена заднего стекла",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Автомобильные стёкла",
+    "name": "Регулировка стеклоподъёмников",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Мойка и детейлинг",
+    "name": "Комплексная мойка автомобиля",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Мойка и детейлинг",
+    "name": "Химчистка салона",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Мойка и детейлинг",
+    "name": "Чистка потолка салона",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Мойка и детейлинг",
+    "name": "Чистка и обработка кожаного салона",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Мойка и детейлинг",
+    "name": "Полировка фар",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Мойка и детейлинг",
+    "name": "Нанесение защитного покрытия",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Мойка и детейлинг",
+    "name": "Керамическое покрытие кузова",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Мойка и детейлинг",
+    "name": "Оклейка защитной плёнкой",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Мойка и детейлинг",
+    "name": "Тонировка стёкол",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Мойка и детейлинг",
+    "name": "Озонирование салона",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Мойка и детейлинг",
+    "name": "Удаление неприятных запахов",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Мойка и детейлинг",
+    "name": "Шумоизоляция салона",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Мойка и детейлинг",
+    "name": "Шумоизоляция колёсных арок",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Дополнительные услуги",
+    "name": "Предпродажная подготовка автомобиля",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Дополнительные услуги",
+    "name": "Подготовка к техническому осмотру",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Дополнительные услуги",
+    "name": "Установка защиты картера",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Дополнительные услуги",
+    "name": "Замена замков и личинок",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Дополнительные услуги",
+    "name": "Ремонт дверных механизмов",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Дополнительные услуги",
+    "name": "Установка дополнительного оборудования",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Дополнительные услуги",
+    "name": "Эвакуация автомобиля",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Дополнительные услуги",
+    "name": "Выездная диагностика",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Дополнительные услуги",
+    "name": "Помощь при запуске двигателя",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Дополнительные услуги",
+    "name": "Вскрытие автомобиля при потере ключей",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Дополнительные услуги",
+    "name": "Установка фаркопа",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "Дополнительные услуги",
+    "name": "Замена зеркала бокового вида",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "ГБО",
+    "name": "Установка ГБО",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "ГБО",
+    "name": "Диагностика ГБО",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "ГБО",
+    "name": "Обслуживание / регулировка ГБО",
+    "is_featured": false,
+    "image_key": null
+  },
+  {
+    "category": "ГБО",
+    "name": "Ремонт ГБО",
+    "is_featured": false,
+    "image_key": null
+  }
+]

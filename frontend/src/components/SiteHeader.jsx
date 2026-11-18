@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCity } from '../contexts/CityContext';
 import CitySelect from './CitySelect';
+import ThemeToggle from './ThemeToggle';
 import logoImage from '../assets/logo-header.png';
 
 function SettingsIcon() {
@@ -191,6 +192,7 @@ export default function SiteHeader({
         )}
 
         <div className="auth-nav">
+          <ThemeToggle />
           {user ? (
             <>
               {isExecutorCabinet ? (

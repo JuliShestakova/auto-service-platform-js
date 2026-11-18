@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import './App.css';
+import './theme-dark.css';
 
 import {
   BrowserRouter,
@@ -11,6 +12,8 @@ import {
 import { AuthProvider } from './contexts/AuthContext';
 import { CityProvider, useCity } from './contexts/CityContext';
 import { LocationProvider } from './contexts/LocationContext';
+import { ReferenceProvider } from './contexts/ReferenceContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { DEFAULT_CITY } from './data/cities';
 import MapPage from './pages/MapPage';
 import HomePage from './pages/HomePage';
@@ -93,8 +96,10 @@ function App() {
 
 
   return (
+    <ThemeProvider>
     <AuthProvider>
       <CityProvider>
+      <ReferenceProvider>
       <LocationProvider>
 
       <BrowserRouter>
@@ -425,8 +430,10 @@ function App() {
       </BrowserRouter>
 
       </LocationProvider>
+      </ReferenceProvider>
       </CityProvider>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
 

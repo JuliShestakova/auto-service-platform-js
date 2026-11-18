@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useCity } from '../contexts/CityContext';
 import HoursRangeInputs from '../components/HoursRangeInputs';
-import { CITIES, DEFAULT_CITY } from '../data/cities';
+import { DEFAULT_CITY } from '../data/cities';
 import {
   isCompleteHoursRange,
   isValidHoursRange,
@@ -147,6 +148,11 @@ function RegisterPage({
 }) {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const {
+    cities,
+    city: selectedCity,
+    defaultCity,
+  } = useCity();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -156,7 +162,7 @@ function RegisterPage({
   const [role, setRole] = useState(initialRole === 'executor' ? 'executor' : 'customer');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [city, setCity] = useState(DEFAULT_CITY);
+  const [city, setCity] = useState(selectedCity || defaultCity || DEFAULT_CITY);
   const [hoursFrom, setHoursFrom] = useState('');
   const [hoursTo, setHoursTo] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -207,7 +213,7 @@ function RegisterPage({
       if (!SHOP_NAME_PATTERN.test(trimmedName)) {
         return 'Название содержит недопустимые символы';
       }
-      if (!city || !CITIES.includes(city)) {
+      if (!city || (cities.length > 0 && !cities.includes(city))) {
         return 'Выберите город из списка';
       }
       if (!trimmedAddress || trimmedAddress.length < 5) {
@@ -269,11 +275,23 @@ function RegisterPage({
     phone,
     address,
     city,
+    cities,
     hoursFrom,
     hoursTo,
     acceptTerms,
     acceptPrivacy,
   ]);
+
+  useEffect(() => {
+    if (!cities.length) return;
+    setCity((current) => (
+      cities.includes(current)
+        ? current
+        : (selectedCity && cities.includes(selectedCity)
+          ? selectedCity
+          : (defaultCity || cities[0]))
+    ));
+  }, [cities, selectedCity, defaultCity]);
 
   const canSubmit = !validationError && !isLoading;
 
@@ -299,7 +317,7 @@ function RegisterPage({
     setRole('customer');
     setPhone('');
     setAddress('');
-    setCity(DEFAULT_CITY);
+    setCity(defaultCity || selectedCity || DEFAULT_CITY);
     setHoursFrom('');
     setHoursTo('');
     setAcceptTerms(false);
@@ -517,7 +535,7 @@ function RegisterPage({
                   disabled={isLoading}
                   required
                 >
-                  {CITIES.map((item) => (
+                  {(cities.length ? cities : [defaultCity || DEFAULT_CITY]).map((item) => (
                     <option key={item} value={item}>
                       {item}
                     </option>

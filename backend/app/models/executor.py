@@ -19,7 +19,7 @@ class Executor(Base):
     reviews: Mapped[int] = mapped_column()
     price: Mapped[str] = mapped_column(String(100))
     address: Mapped[str] = mapped_column(String(255))
-    city: Mapped[str] = mapped_column(String(100), default="Краснодар")
+    city: Mapped[str] = mapped_column(String(100), default="")
     status: Mapped[str] = mapped_column(String(50))
     hours: Mapped[str] = mapped_column(String(50))
     description: Mapped[str] = mapped_column(String(1000))

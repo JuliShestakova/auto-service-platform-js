@@ -1,0 +1,72 @@
+[
+  {
+    "name": "Москва",
+    "name_genitive": "Москвы",
+    "latitude": 55.7558,
+    "longitude": 37.6173,
+    "is_default": false
+  },
+  {
+    "name": "Санкт-Петербург",
+    "name_genitive": "Санкт-Петербурга",
+    "latitude": 59.9311,
+    "longitude": 30.3609,
+    "is_default": false
+  },
+  {
+    "name": "Новосибирск",
+    "name_genitive": "Новосибирска",
+    "latitude": 55.0084,
+    "longitude": 82.9357,
+    "is_default": false
+  },
+  {
+    "name": "Екатеринбург",
+    "name_genitive": "Екатеринбурга",
+    "latitude": 56.8389,
+    "longitude": 60.6057,
+    "is_default": false
+  },
+  {
+    "name": "Казань",
+    "name_genitive": "Казани",
+    "latitude": 55.7961,
+    "longitude": 49.1064,
+    "is_default": false
+  },
+  {
+    "name": "Нижний Новгород",
+    "name_genitive": "Нижнего Новгорода",
+    "latitude": 56.2965,
+    "longitude": 43.9361,
+    "is_default": false
+  },
+  {
+    "name": "Ростов-на-Дону",
+    "name_genitive": "Ростова-на-Дону",
+    "latitude": 47.2357,
+    "longitude": 39.7015,
+    "is_default": false
+  },
+  {
+    "name": "Краснодар",
+    "name_genitive": "Краснодара",
+    "latitude": 45.0355,
+    "longitude": 38.9753,
+    "is_default": true
+  },
+  {
+    "name": "Самара",
+    "name_genitive": "Самары",
+    "latitude": 53.1959,
+    "longitude": 50.1002,
+    "is_default": false
+  },
+  {
+    "name": "Сочи",
+    "name_genitive": "Сочи",
+    "latitude": 43.6028,
+    "longitude": 39.7342,
+    "is_default": false
+  }
+]

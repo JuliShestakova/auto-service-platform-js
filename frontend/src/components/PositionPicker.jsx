@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { STAFF_POSITIONS } from '../data/staffPositions';
+import { useReference } from '../contexts/ReferenceContext';
 
 export default function PositionPicker({
   value = [],
@@ -7,6 +7,7 @@ export default function PositionPicker({
   placeholder = 'Выберите должности',
   disabled = false,
 }) {
+  const { staffPositions } = useReference();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const rootRef = useRef(null);
@@ -15,9 +16,9 @@ export default function PositionPicker({
   const selected = Array.isArray(value) ? value : [];
 
   const options = useMemo(() => {
-    const extras = selected.filter((item) => !STAFF_POSITIONS.includes(item));
-    return [...extras, ...STAFF_POSITIONS];
-  }, [selected]);
+    const extras = selected.filter((item) => !staffPositions.includes(item));
+    return [...extras, ...staffPositions];
+  }, [selected, staffPositions]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase('ru');

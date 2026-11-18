@@ -3,11 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCity } from '../contexts/CityContext';
 import { DEFAULT_CITY } from '../data/cities';
-import {
-  SERVICE_ALIASES,
-  SERVICE_CATALOG,
-  SERVICE_GROUPS,
-} from '../data/serviceCatalog';
+import { useReference } from '../contexts/ReferenceContext';
 import CitySelect from '../components/CitySelect';
 import FavoriteButton from '../components/FavoriteButton';
 import ServiceCardModal from '../components/ServiceCardModal';
@@ -15,7 +11,10 @@ import ServiceSuggest from '../components/ServiceSuggest';
 import SiteHeader from '../components/SiteHeader';
 import { useLocation } from '../contexts/LocationContext';
 import useFavorites from '../hooks/useFavorites';
-import { listServiceNames } from '../services/catalog';
+import {
+  groupServicesByCategory,
+  listServiceCatalog,
+} from '../services/catalog';
 import { listExecutorReviews, listExecutors } from '../services/executors';
 import { canBookOnline, createOrder } from '../services/orders';
 import { canCustomerReview, createReview, deleteReview } from '../services/reviews';
@@ -39,28 +38,6 @@ const SHOP_IMAGES = [
   shopImage8,
 ];
 
-const GROUP_META = {
-  ТО: { label: 'ТО', icon: 'to' },
-  Двигатель: { label: 'Двигатель', icon: 'engine' },
-  Трансмиссия: { label: 'Трансмиссия', icon: 'trans' },
-  Диагностика: { label: 'Диагностика', icon: 'diag' },
-  'Топливная система': { label: 'Топливная система', icon: 'fuel' },
-  'Тормозная система': { label: 'Тормозная система', icon: 'brake' },
-  'Подвеска и ходовая часть': { label: 'Ходовая', icon: 'chassis' },
-  'Рулевое управление': { label: 'Рулевое', icon: 'steer' },
-  'Система охлаждения': { label: 'Охлаждение', icon: 'cool' },
-  'Выхлопная система': { label: 'Выхлоп', icon: 'exhaust' },
-  Электрооборудование: { label: 'Электрика', icon: 'electro' },
-  'Кондиционер и отопление': { label: 'Кондиционер', icon: 'ac' },
-  'Шиномонтаж и колёса': { label: 'Шиномонтаж', icon: 'tire' },
-  'Развал-схождение': { label: 'Развал', icon: 'align' },
-  'Кузовной ремонт и покраска': { label: 'Кузов', icon: 'body' },
-  'Автомобильные стёкла': { label: 'Стёкла', icon: 'glass' },
-  'Мойка и детейлинг': { label: 'Мойка', icon: 'wash' },
-  ГБО: { label: 'ГБО', icon: 'gas' },
-  'Дополнительные услуги': { label: 'Доп. услуги', icon: 'more' },
-  Другое: { label: 'Другое', icon: 'more' },
-};
 
 function GroupIcon({ name }) {
   const common = {
@@ -163,6 +140,7 @@ function serviceRows(executor) {
 function SearchPage({ onLogin, onRegister }) {
   const { user, authFetch } = useAuth();
   const { city: selectedCity, cities, setCity } = useCity();
+  const { serviceAliases, categoryMeta } = useReference();
   const { location, distanceTo, formatDistance } = useLocation();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [params, setParams] = useSearchParams();
@@ -181,7 +159,8 @@ function SearchPage({ onLogin, onRegister }) {
   const [bookingError, setBookingError] = useState('');
   const [bookingDone, setBookingDone] = useState(false);
   const [bookingSaving, setBookingSaving] = useState(false);
-  const [catalogNames, setCatalogNames] = useState(SERVICE_CATALOG);
+  const [catalogNames, setCatalogNames] = useState([]);
+  const [catalogGroups, setCatalogGroups] = useState([]);
   const [openGroups, setOpenGroups] = useState(() => new Set());
 
   const work = params.get('work') || '';
@@ -272,10 +251,13 @@ function SearchPage({ onLogin, onRegister }) {
   useEffect(() => {
     const loadCatalog = async () => {
       try {
-        const names = await listServiceNames();
-        if (names.length) setCatalogNames(names);
+        const items = await listServiceCatalog();
+        const names = items.map((item) => item?.name).filter(Boolean);
+        setCatalogNames(names);
+        setCatalogGroups(groupServicesByCategory(items));
       } catch {
-        // локальный каталог
+        setCatalogNames([]);
+        setCatalogGroups([]);
       }
     };
     loadCatalog();
@@ -350,24 +332,23 @@ function SearchPage({ onLogin, onRegister }) {
         .filter(Boolean)
     );
     return [...new Set([
-      ...SERVICE_CATALOG,
-      ...SERVICE_ALIASES,
+      ...serviceAliases,
       ...catalogNames,
       ...fromShops,
     ])];
-  }, [executors, catalogNames]);
+  }, [executors, catalogNames, serviceAliases]);
 
   const filterGroups = useMemo(() => {
-    const known = new Set(SERVICE_GROUPS.flatMap((group) => group.items));
+    const known = new Set(catalogGroups.flatMap((group) => group.items));
     const extras = workOptions.filter((name) => !known.has(name));
     if (extras.length === 0) {
-      return SERVICE_GROUPS;
+      return catalogGroups;
     }
     return [
-      ...SERVICE_GROUPS,
+      ...catalogGroups,
       { category: 'Другое', items: extras.sort((a, b) => a.localeCompare(b, 'ru')) },
     ];
-  }, [workOptions]);
+  }, [workOptions, catalogGroups]);
 
   const results = useMemo(() => {
     const selectedWorks = new Set(checkedWorks);
@@ -667,7 +648,7 @@ function SearchPage({ onLogin, onRegister }) {
                   const selectedCount = group.items.filter((name) =>
                     checkedWorks.includes(name)
                   ).length;
-                  const meta = GROUP_META[group.category] || {
+                  const meta = categoryMeta[group.category] || {
                     label: group.category,
                     icon: 'more',
                   };
@@ -892,7 +873,7 @@ function SearchPage({ onLogin, onRegister }) {
             ...new Set([
               ...serviceRows(bookingExecutor).map(([name]) => name),
               ...catalogNames,
-              ...SERVICE_ALIASES,
+              ...serviceAliases,
             ]),
           ]}
           bookingService={bookingService}

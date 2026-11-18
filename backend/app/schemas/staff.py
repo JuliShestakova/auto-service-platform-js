@@ -2,46 +2,30 @@ import re
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.db.reference_cache import (
+    allowed_staff_positions,
+    default_staff_position,
+)
 from app.schemas.auth import _is_valid_phone
 
 
-STAFF_POSITIONS = (
-    "Мастер",
-    "Моторист",
-    "Автоэлектрик",
-    "Мастер по ремонту АКПП",
-    "Мастер по ремонту МКПП",
-    "Мастер по ходовой части",
-    "Мастер по рулевому управлению",
-    "Мастер по ремонту двигателей",
-    "Шиномонтажник",
-    "Специалист по развал-схождению",
-    "Кузовщик-жестянщик",
-    "Автомаляр",
-    "Мастер по полировке кузова",
-    "Специалист по шумоизоляции",
-    "Специалист по ГБО",
-    "Выездной автомеханик",
-    "Выездной автодиагност",
-    "Мастер по эвакуации автомобилей",
-)
-ALLOWED_STAFF_POSITIONS = set(STAFF_POSITIONS)
 POSITION_SEP = " · "
 POSITION_SPLIT_RE = re.compile(r"\s*[·,;/|]\s*")
 
 
 def normalize_staff_positions(value: str | None) -> str:
+    allowed = allowed_staff_positions()
     parts = POSITION_SPLIT_RE.split((value or "").strip())
     cleaned: list[str] = []
     for item in parts:
         name = item.strip()
         if not name:
             continue
-        if name not in ALLOWED_STAFF_POSITIONS:
+        if allowed and name not in allowed:
             raise ValueError("Выберите должности из списка")
         if name not in cleaned:
             cleaned.append(name)
-    return POSITION_SEP.join(cleaned) or "Мастер"
+    return POSITION_SEP.join(cleaned) or default_staff_position()
 
 
 class StaffCreate(BaseModel):

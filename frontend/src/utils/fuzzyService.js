@@ -33,21 +33,23 @@ function levenshtein(left, right) {
   return matrix[left.length][right.length];
 }
 
-const SYNONYMS = [
-  { keys: ['колодк', 'тормоз'], hint: 'тормозных колодок' },
-  { keys: ['масл'], hint: 'замена масла' },
-  { keys: ['шином', 'резин', 'колес'], hint: 'шиномонтаж' },
-  { keys: ['диагност', 'компьютер'], hint: 'компьютерная диагностика' },
-  { keys: ['двигател', 'мотор'], hint: 'ремонт двигателя' },
-  { keys: ['кондиц', 'заправк'], hint: 'заправка кондиционера' },
-];
+let synonymGroups = [];
+
+export function setServiceSynonyms(rows = []) {
+  synonymGroups = (rows || [])
+    .map((item) => ({
+      keys: Array.isArray(item?.keys) ? item.keys : [],
+      hint: String(item?.hint || ''),
+    }))
+    .filter((item) => item.keys.length && item.hint);
+}
 
 function expandQuery(query) {
   const normalized = normalizeRu(query);
   if (!normalized) return '';
 
   let expanded = normalized;
-  for (const group of SYNONYMS) {
+  for (const group of synonymGroups) {
     if (group.keys.some((key) => normalized.includes(key))) {
       expanded = `${expanded} ${group.hint}`;
     }
@@ -100,8 +102,7 @@ export function scoreServiceMatch(query, serviceName) {
     }
 
     if (best > maxAllowedDistance(queryToken)) {
-      // синонимный токен не обязан совпасть строго
-      if (SYNONYMS.some((group) => group.hint.includes(queryToken))) {
+      if (synonymGroups.some((group) => group.hint.includes(queryToken))) {
         continue;
       }
       return -1;

@@ -7,10 +7,7 @@ import ServiceCardModal from '../components/ServiceCardModal';
 import ServiceSuggest from '../components/ServiceSuggest';
 import SiteHeader from '../components/SiteHeader';
 import useFavorites from '../hooks/useFavorites';
-import {
-  SERVICE_ALIASES,
-  SERVICE_CATALOG,
-} from '../data/serviceCatalog';
+import { useReference } from '../contexts/ReferenceContext';
 import { resolveBestService } from '../utils/fuzzyService';
 import { listServiceNames } from '../services/catalog';
 import { listExecutorReviews, listExecutors } from '../services/executors';
@@ -138,14 +135,23 @@ function ServiceArrowIcon() {
   );
 }
 
-const POPULAR_SERVICES = [
-  { name: 'Замена масла', image: serviceOil, Icon: ServiceOilIcon },
-  { name: 'Замена тормозных колодок', image: serviceBrakes, Icon: ServiceBrakeIcon },
-  { name: 'Компьютерная диагностика', image: serviceDiagnostics, Icon: ServiceLaptopIcon },
-  { name: 'Шиномонтаж', image: serviceTires, Icon: ServiceTireIcon },
-  { name: 'Ремонт двигателя', image: serviceEngine, Icon: ServiceEngineIcon },
-  { name: 'Заправка кондиционера', image: serviceAc, Icon: ServiceAcIcon },
-];
+const FEATURED_IMAGES = {
+  'oil-change': serviceOil,
+  'brake-pads': serviceBrakes,
+  diagnostics: serviceDiagnostics,
+  'tire-service': serviceTires,
+  'engine-repair': serviceEngine,
+  'ac-refill': serviceAc,
+};
+
+const FEATURED_ICONS = {
+  'oil-change': ServiceOilIcon,
+  'brake-pads': ServiceBrakeIcon,
+  diagnostics: ServiceLaptopIcon,
+  'tire-service': ServiceTireIcon,
+  'engine-repair': ServiceEngineIcon,
+  'ac-refill': ServiceAcIcon,
+};
 
 
 /* =====================================================
@@ -469,9 +475,15 @@ function HomePage({
     authFetch,
   } = useAuth();
   const { city } = useCity();
+  const { serviceAliases, featuredServices } = useReference();
   const { isFavorite, toggleFavorite } = useFavorites();
 
   const navigate = useNavigate();
+  const popularServices = featuredServices.map((item) => ({
+    name: item.name,
+    image: FEATURED_IMAGES[item.image_key] || serviceDiagnostics,
+    Icon: FEATURED_ICONS[item.image_key] || ServiceLaptopIcon,
+  }));
 
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -484,7 +496,7 @@ function HomePage({
   const [services, setServices] = useState([]);
   const [servicesLoading, setServicesLoading] = useState(true);
   const [servicesError, setServicesError] = useState('');
-  const [catalogNames, setCatalogNames] = useState(SERVICE_CATALOG);
+  const [catalogNames, setCatalogNames] = useState([]);
   const [workQuery, setWorkQuery] = useState('');
   const [heroWork, setHeroWork] = useState('');
   const [headerScrolled, setHeaderScrolled] = useState(false);
@@ -651,8 +663,8 @@ function HomePage({
   ===================================================== */
 
   const preferredWorks = [
-    ...POPULAR_SERVICES.map((item) => item.name),
-    ...SERVICE_ALIASES,
+    ...popularServices.map((item) => item.name),
+    ...serviceAliases,
   ];
 
   const workOptions = (() => {
@@ -951,7 +963,7 @@ function HomePage({
           </div>
 
           <div className="work-card-grid">
-            {POPULAR_SERVICES.map((item) => {
+            {popularServices.map((item) => {
               const Icon = item.Icon;
 
               return (

@@ -1,0 +1,8 @@
+[
+  { "name": "Замена масла", "image_key": "oil-change", "sort_order": 1 },
+  { "name": "Замена тормозных колодок", "image_key": "brake-pads", "sort_order": 2 },
+  { "name": "Компьютерная диагностика", "image_key": "diagnostics", "sort_order": 3 },
+  { "name": "Шиномонтаж", "image_key": "tire-service", "sort_order": 4 },
+  { "name": "Ремонт двигателя", "image_key": "engine-repair", "sort_order": 5 },
+  { "name": "Заправка кондиционера", "image_key": "ac-refill", "sort_order": 6 }
+]

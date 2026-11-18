@@ -4,17 +4,15 @@ import 'leaflet/dist/leaflet.css';
 import { useAuth } from '../contexts/AuthContext';
 import { useCity } from '../contexts/CityContext';
 import { useLocation } from '../contexts/LocationContext';
-import { CITY_COORDS, DEFAULT_CITY } from '../data/cities';
-import {
-  SERVICE_ALIASES,
-  SERVICE_CATALOG,
-} from '../data/serviceCatalog';
+import { DEFAULT_CITY } from '../data/cities';
+import { useReference } from '../contexts/ReferenceContext';
 import FavoriteButton from '../components/FavoriteButton';
 import ServiceCardModal from '../components/ServiceCardModal';
 import ServiceSuggest from '../components/ServiceSuggest';
 import SiteHeader from '../components/SiteHeader';
 import useFavorites from '../hooks/useFavorites';
 import { shopCoords } from '../utils/geo';
+import { listServiceNames } from '../services/catalog';
 import { listExecutorReviews, listExecutors } from '../services/executors';
 import { canBookOnline, createOrder } from '../services/orders';
 import { canCustomerReview, createReview, deleteReview } from '../services/reviews';
@@ -57,7 +55,8 @@ function userIcon() {
 
 function MapPage({ onLogin, onRegister }) {
   const { user, authFetch } = useAuth();
-  const { city } = useCity();
+  const { city, cityCoords, defaultCity, cityRows } = useCity();
+  const { serviceAliases } = useReference();
   const {
     location,
     status,
@@ -73,6 +72,7 @@ function MapPage({ onLogin, onRegister }) {
   const markersRef = useRef(null);
 
   const [executors, setExecutors] = useState([]);
+  const [catalogNames, setCatalogNames] = useState([]);
   const [query, setQuery] = useState('');
   const [minRating, setMinRating] = useState(0);
   const [openOnly, setOpenOnly] = useState(false);
@@ -103,13 +103,27 @@ function MapPage({ onLogin, onRegister }) {
     load();
   }, [city]);
 
+  useEffect(() => {
+    let cancelled = false;
+    listServiceNames()
+      .then((names) => {
+        if (!cancelled) setCatalogNames(names);
+      })
+      .catch(() => {
+        if (!cancelled) setCatalogNames([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const workOptions = useMemo(() => ([
     ...new Set([
-      ...SERVICE_CATALOG,
-      ...SERVICE_ALIASES,
+      ...catalogNames,
+      ...serviceAliases,
       ...executors.flatMap((item) => (item.services || []).map((row) => row?.[0]).filter(Boolean)),
     ]),
-  ]), [executors]);
+  ]), [catalogNames, executors, serviceAliases]);
 
   const results = useMemo(() => {
         const needle = query.trim().toLowerCase();
@@ -140,7 +154,10 @@ function MapPage({ onLogin, onRegister }) {
 
   useEffect(() => {
     if (!mapNodeRef.current) return undefined;
-    const center = CITY_COORDS[city] || CITY_COORDS[DEFAULT_CITY];
+    const center = cityCoords[city]
+      || cityCoords[defaultCity]
+      || cityCoords[DEFAULT_CITY]
+      || [45.0355, 38.9753];
     const map = L.map(mapNodeRef.current, { zoomControl: false, attributionControl: true });
     L.control.zoom({ position: 'topright' }).addTo(map);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -160,7 +177,7 @@ function MapPage({ onLogin, onRegister }) {
       mapRef.current = null;
       markersRef.current = null;
     };
-  }, [city]);
+  }, [city, cityCoords, defaultCity]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -280,7 +297,10 @@ function MapPage({ onLogin, onRegister }) {
     await setFromAddress(addressDraft);
   };
 
-  const cityGenitive = city === 'Краснодар' ? 'Краснодара' : city;
+  const cityGenitive = (
+    cityRows.find((item) => item.name === city)?.name_genitive
+    || city
+  );
 
   return (
     <div className="home-page map-page">

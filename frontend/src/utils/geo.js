@@ -1,13 +1,36 @@
-import { CITY_COORDS, DEFAULT_CITY } from '../data/cities';
+import { DEFAULT_CITY } from '../data/cities';
 
-export function shopCoords(executor, fallbackCity = DEFAULT_CITY) {
+let cityCoordsCache = {};
+let defaultCityCache = DEFAULT_CITY;
+
+export function setCityCoordsCache(coords = {}, defaultCity = DEFAULT_CITY) {
+  cityCoordsCache = { ...(coords || {}) };
+  defaultCityCache = defaultCity || DEFAULT_CITY;
+}
+
+function firstCachedCoords() {
+  const values = Object.values(cityCoordsCache);
+  return values.find((item) => Array.isArray(item) && item.length === 2) || null;
+}
+
+function cityCenter(city, fallbackCity = defaultCityCache) {
+  return (
+    cityCoordsCache[city]
+    || cityCoordsCache[fallbackCity]
+    || cityCoordsCache[DEFAULT_CITY]
+    || firstCachedCoords()
+    || null
+  );
+}
+
+export function shopCoords(executor, fallbackCity = defaultCityCache) {
   const lat = executor?.latitude == null ? NaN : Number(executor.latitude);
   const lng = executor?.longitude == null ? NaN : Number(executor.longitude);
   if (Number.isFinite(lat) && Number.isFinite(lng) && !(lat === 0 && lng === 0)) {
     return { lat, lng };
   }
 
-  const center = CITY_COORDS[executor?.city] || CITY_COORDS[fallbackCity] || CITY_COORDS[DEFAULT_CITY];
+  const center = cityCenter(executor?.city, fallbackCity) || [0, 0];
   const n = Number(executor?.id) || 0;
   const angle = (n * 2.399) % (Math.PI * 2);
   const radius = 0.01 + (n % 8) * 0.0035;
@@ -56,7 +79,7 @@ export async function geocodeAddress(query, city = '') {
   const needle = city && !raw.toLowerCase().includes(city.toLowerCase())
     ? `${raw}, ${city}`
     : raw;
-  const center = CITY_COORDS[city] || CITY_COORDS[DEFAULT_CITY];
+  const center = cityCenter(city);
 
   try {
     const params = new URLSearchParams({
